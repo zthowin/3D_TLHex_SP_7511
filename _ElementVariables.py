@@ -38,19 +38,17 @@ def compute_variables(self, Parameters):
 @register_method
 def get_dudX(self):
     # Compute solid displacement gradient.
-    self.dudX = np.einsum('ij..., j...', self.Bu, self.u_global, dtype=np.float64).T
+    self.dudX = np.einsum('ij..., j...', self.Bu, self.u_global, dtype=np.float64)
     return
 
 @register_method
 def get_F(self):
     # Reshape the identity matrix for all 8 Gauss points.
-    shape = (3,3,8)
+    shape = (8,3,3)
     self.identity = np.zeros(shape)
-    np.einsum('iij->ij', self.identity)[:] = 1
+    np.einsum('ijj->ij', self.identity)[:] = 1
     # Compute deformation gradient.
-    # The transpose is so that NumPy returns a (8,3,3) so that it can operate on the 0'th axis
-    # for the following two functions.
-    self.F = (self.identity + self.dudX.reshape((3,3,8))).T
+    self.F = (self.identity + self.dudX.reshape((8,3,3)))
     return
 
 @register_method
@@ -80,24 +78,25 @@ def get_C_inv(self):
 @register_method
 def get_SPK(self, Parameters):
     # Compute second Piola-Kirchoff stress tensor.
-    self.SPK = Parameters.mu*self.identity + (Parameters.lambd*np.log(self.J) - Parameters.mu)*self.C_inv.reshape((3,3,8))
+    self.SPK = Parameters.mu*self.identity + np.einsum('..., ...IJ', Parameters.lambd*np.log(self.J) - Parameters.mu,\
+                                                                     self.C_inv)
     return
 
 @register_method
 def get_FPK(self):
     # Compute first Piola-Kirchoff stress tensor.
-    self.FPK = np.einsum('iI..., JI...', self.F.T, self.SPK)
+    self.FPK = np.einsum('...iI, ...JI', self.F, self.SPK)
     return
 
 @register_method
 def get_rho(self):
     # Compute mass density in current configuration.
-    self.rho = self.J*self.rho_0
+    self.rho = np.einsum('..., ...I', self.J, self.rho_0)
     return
 
 @register_method
 def get_rho_0(self, Parameters):
     # Compute mass density in reference configuration.
     # Should be constant for single-phase (i.e., classical continuum mechanics) materials.
-    self.rho_0 = Parameters.rhoS_0*np.ones((3,8))
+    self.rho_0 = Parameters.rhoS_0*np.ones((8,3))
     return

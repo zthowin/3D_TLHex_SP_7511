@@ -28,7 +28,7 @@ def compute_tangents(self, Parameters):
 @register_method
 def get_G_Tangents(self, Parameters):
     # Assemble solid consistent tangents.
-    self.G_Mtx = np.zeros((24,24,8))
+    self.G_Mtx = np.zeros((8,9,9))
     self.get_G_uu_1(Parameters)
 
     try:
@@ -41,24 +41,78 @@ def get_G_Tangents(self, Parameters):
 @register_method
 def get_G_uu_1(self, Parameters):
     # Compute G_uu_1.
-    # debug1 = np.einsum('ai..., AI...', self.identity, self.SPK)
-    # debug2 = Parameters.lambd*np.einsum('...Aa,...Ii', self.F_inv, self.F_inv)
+    # debug1 = np.einsum('...ai, ...AI', self.identity, self.SPK)
+    # debug2 = Parameters.lambd*np.einsum('...Aa,...Ii', self.F_inv, self.F_inv) 
     # debug3 = np.einsum('...Ai, ...Ia', self.F_inv, self.F_inv)
-    # debug4 = np.einsum('ai..., ...AI', self.identity, self.C_inv)
-    # print(debug1.shape)
-    # print(debug2.shape)
-    # print(debug3.shape)
-    # print(debug4.shape)
-    # debug5 = np.einsum('..., ...aiAI', Parameters.lambd*np.log(self.J) - Parameters.mu,debug4)
-    # print(debug5.shape)
-    self.dPdF = np.einsum('ai..., AI...', self.identity, self.SPK)\
+    # debug4 = np.einsum('...ai, ...AI', self.identity, self.C_inv)
+    # debug5 = np.einsum('..., ...aiAI', Parameters.lambd*np.log(self.J) - Parameters.mu, debug3 + debug4)
+
+    self.dPdF = np.einsum('...ai, ...AI', self.identity, self.SPK)\
                 + Parameters.lambd*np.einsum('...Aa,...Ii', self.F_inv, self.F_inv)\
                 + np.einsum('..., ...aiAI', Parameters.lambd*np.log(self.J) - Parameters.mu,\
                                             (np.einsum('...Ai, ...Ia', self.F_inv, self.F_inv)\
-                                             + np.einsum('ai..., ...AI', self.identity, self.C_inv)))
+                                             + np.einsum('...ai, ...AI', self.identity, self.C_inv)))
 
-    
-    print(self.dPdF.shape)
-    print(self.Bu.shape)
-    self.G_uu_1 = np.einsum('iI..., aA..., aiAI...', self.Bu, self.Bu, self.dPdF, dtype=np.float64)
+    self.dPdF_voigt = np.zeros((8,9,9), dtype=np.float64)
+    for alpha in range(9):
+        if alpha == 0:
+            i = 0
+            I = 0
+        elif alpha == 1:
+            i = 0
+            I = 1
+        elif alpha == 2:
+            i = 0
+            I = 2
+        elif alpha == 3:
+            i = 1
+            I = 0
+        elif alpha == 4:
+            i = 1
+            I = 1
+        elif alpha == 5:
+            i = 1
+            I = 2
+        elif alpha == 6:
+            i = 2
+            I = 0
+        elif alpha == 7:
+            i = 2
+            I = 1
+        elif alpha == 8:
+            i = 2
+            I = 2
+        for beta in range(9):
+            if beta == 0:
+                a = 0
+                A = 0
+            elif beta == 1:
+                a = 0
+                A = 1
+            elif beta == 2:
+                a = 0
+                A = 2
+            elif beta == 3:
+                a = 1
+                A = 0
+            elif beta == 4:
+                a = 1
+                A = 1
+            elif beta == 5:
+                a = 1
+                A = 2
+            elif beta == 6:
+                a = 2
+                A = 0
+            elif beta == 7:
+                a = 2
+                A = 1
+            elif beta == 8:
+                a = 2
+                A = 2
+
+            self.dPdF_voigt[:,alpha,beta] = self.dPdF[:,i,I,a,A]
+
+    self.G_uu_1 = np.einsum('iI..., iI..., ...ab', self.Bu, self.Bu,\
+                            np.einsum('...ab, ...', self.dPdF_voigt, self.weights*self.j), dtype=np.float64)
     return
