@@ -18,13 +18,18 @@ except ImportError:
     sys.exit("MODULE WARNING. 'Lib.py' not found, check configuration.")
 
 __methods__     = []
-register_method = Lib.register_method(__methods__) 
+register_method = Lib.register_method(__methods__)
 
 @register_method
-def get_G_Tangents(self):
+def compute_tangents(self, Parameters):
+    # Compute element tangents.
+    self.get_G_Tangents(Parameters)
+
+@register_method
+def get_G_Tangents(self, Parameters):
     # Assemble solid consistent tangents.
     self.G_Mtx = np.zeros((24,24,8))
-    self.get_G_uu_1()
+    self.get_G_uu_1(Parameters)
 
     try:
         self.G_Mtx += self.G_uu_1
@@ -34,11 +39,26 @@ def get_G_Tangents(self):
     return
 
 @register_method
-def get_G_uu_1(self):
+def get_G_uu_1(self, Parameters):
     # Compute G_uu_1.
-    dPdF = np.einsum('ai..., AI...', self.identity, self.SPK) + Parameters.lambd*np.einsum('Aa...,Ii...', self.F_inv, self.F_inv)\
-           + (Parameters.lambd*np.log(self.J) - Parameters.mu)*(np.einsum('Ai..., Ia...', self.F_inv, self.F_inv)\
-                                                                + np.einsum('ai..., AI...', self.identity, self.C_inv))
+    # debug1 = np.einsum('ai..., AI...', self.identity, self.SPK)
+    # debug2 = Parameters.lambd*np.einsum('...Aa,...Ii', self.F_inv, self.F_inv)
+    # debug3 = np.einsum('...Ai, ...Ia', self.F_inv, self.F_inv)
+    # debug4 = np.einsum('ai..., ...AI', self.identity, self.C_inv)
+    # print(debug1.shape)
+    # print(debug2.shape)
+    # print(debug3.shape)
+    # print(debug4.shape)
+    # debug5 = np.einsum('..., ...aiAI', Parameters.lambd*np.log(self.J) - Parameters.mu,debug4)
+    # print(debug5.shape)
+    self.dPdF = np.einsum('ai..., AI...', self.identity, self.SPK)\
+                + Parameters.lambd*np.einsum('...Aa,...Ii', self.F_inv, self.F_inv)\
+                + np.einsum('..., ...aiAI', Parameters.lambd*np.log(self.J) - Parameters.mu,\
+                                            (np.einsum('...Ai, ...Ia', self.F_inv, self.F_inv)\
+                                             + np.einsum('ai..., ...AI', self.identity, self.C_inv)))
 
-    self.G_uu_1 = np.einsum('iI..., aA..., aA...', self.Bu, self.Bu, dPdF*self.weights*self.j, dtype=np.float64)
+    
+    print(self.dPdF.shape)
+    print(self.Bu.shape)
+    self.G_uu_1 = np.einsum('iI..., aA..., aiAI...', self.Bu, self.Bu, self.dPdF, dtype=np.float64)
     return
