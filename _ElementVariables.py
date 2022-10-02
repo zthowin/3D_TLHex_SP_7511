@@ -86,7 +86,7 @@ def get_SPK(self, Parameters):
 @register_method
 def get_FPK(self):
     # Compute first Piola-Kirchoff stress tensor.
-    self.FPK = np.einsum('iI..., JI...', self.F.T, self.SPK).T
+    self.FPK = np.einsum('iI..., JI...', self.F.T, self.SPK)
     return
 
 @register_method
@@ -99,5 +99,5 @@ def get_rho(self):
 def get_rho_0(self, Parameters):
     # Compute mass density in reference configuration.
     # Should be constant for single-phase (i.e., classical continuum mechanics) materials.
-    self.rho_0 = Parameters.rhoS_0*np.ones(8)
+    self.rho_0 = Parameters.rhoS_0*np.ones((3,8))
     return
