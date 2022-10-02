@@ -28,7 +28,7 @@ def compute_tangents(self, Parameters):
 @register_method
 def get_G_Tangents(self, Parameters):
     # Assemble solid consistent tangents.
-    self.G_Mtx = np.zeros((8,9,9))
+    self.G_Mtx = np.zeros((24,24))
     self.get_G_uu_1(Parameters)
 
     try:
@@ -113,6 +113,21 @@ def get_G_uu_1(self, Parameters):
 
             self.dPdF_voigt[:,alpha,beta] = self.dPdF[:,i,I,a,A]
 
-    self.G_uu_1 = np.einsum('iI..., iI..., ...ab', self.Bu, self.Bu,\
-                            np.einsum('...ab, ...', self.dPdF_voigt, self.weights*self.j), dtype=np.float64)
+    # 24 x 9 x 8
+    # 9 x 24 x 8
+    # 9 x 9 x 8
+    # print(self.dPdF_voigt.shape)
+    # print(self.Bu.shape, self.j)
+    # print(self.Bu.T.shape)
+    # weighted_dPdF = np.einsum('...ab, ...', self.dPdF_voigt, self.weights*self.j)
+    weighted_dPdF = np.einsum('...lm, ...', self.dPdF_voigt, self.weights*self.j)
+    # print(weighted_dPdF.shape)
+    one = np.einsum('ij..., ...ik', self.Bu, weighted_dPdF)
+    self.G_uu_1 = np.einsum('kij, jlk', one, self.Bu)
+    # print(self.Bu.shape)
+    # print(two.shape)
+    # print(one.shape)
+    # self.G_uu_1 = np.einsum('ijk, kjj, jik', self.Bu, weighted_dPdF, self.Bu, dtype=np.float64)
+    # print(self.G_uu_1.shape)
+    # sys.exit()
     return
