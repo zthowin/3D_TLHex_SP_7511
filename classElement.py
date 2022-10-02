@@ -292,7 +292,7 @@ class Element:
 
     def apply_Local_BC(self, a_g):
         # Apply boundary conditions at the element scale.
-        if np.any(self.DOF == -1):
+        if np.any(self.DOF < 0):
             idxs = np.where((self.DOF == -1))[0]
             for idx in idxs:
                 self.u_global[idx] = a_g[idx, self.ID]
