@@ -42,11 +42,11 @@ def get_G_Forces(self, Parameters):
 @register_method
 def get_G1(self):
     # Compute G_1^INT.
-    self.G1 = np.einsum('ij..., i...', self.Bu, self.FPK*self.weights*self.j, dtype=np.float64)
+    self.G_1 = np.einsum('ij..., i...', self.Bu, self.FPK.reshape((9,8))*self.weights*self.j, dtype=np.float64)
     return
 
 @register_method
 def get_G2(self, Parameters):
     # Compute G_2^INT.
-    self.G2 = np.einsum('ij..., i...', self.Nu, self.rho*self.weights*self.j*Parameters.grav, dtype=np.float64)
+    self.G_2 = np.einsum('ij..., i...', self.Nu, self.rho*self.weights*self.j*Parameters.grav, dtype=np.float64)
     return
