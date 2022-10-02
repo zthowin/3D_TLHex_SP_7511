@@ -27,12 +27,12 @@ try:
 except ImportError:
   sys.exit("MODULE WARNING. '_ElementForces.py' not found, check configuration.")
 
-# try:
-#   import _ElementTangents
-# except ImportError:
-#   sys.exit("MODULE WARNING. '_ElementTangents.py' not found, check configuration.")
+try:
+  import _ElementTangents
+except ImportError:
+  sys.exit("MODULE WARNING. '_ElementTangents.py' not found, check configuration.")
 
-@Lib.add_methods_from(_ElementVariables)#, _ElementForces, _ElementTangents)
+@Lib.add_methods_from(_ElementVariables, _ElementForces, _ElementTangents)
 
 class Element:
     
