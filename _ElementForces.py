@@ -33,7 +33,10 @@ def get_G_Forces(self, Parameters):
     self.get_G2(Parameters)
 
     try:
-        self.G_int = self.G_1 - self.G_2
+        self.G_int = self.G_1 + self.G_2
+        # print(self.G_1)
+        # print(self.G_2)
+        # input()
     except FloatingPointError:
         print("ERROR. Encountered over/underflow error in G; occurred at element ID %i, t = %.2es and dt = %.2es." %(self.ID, Parameters.t, Parameters.dt))
         raise FloatingPointError
@@ -49,4 +52,6 @@ def get_G1(self):
 def get_G2(self, Parameters):
     # Compute G_2^INT.
     self.G_2 = np.einsum('ijk, ki', self.Nu, np.einsum('...i, ...', self.rho, self.weights*self.j*Parameters.grav), dtype=np.float64)
+    # print(self.G_2)
+    # self.G_2 = np.einsum('ijk, ki', self.Nu, self.rho*self.weights*self.j*np.array([0,0,Parameters.grav]))
     return
