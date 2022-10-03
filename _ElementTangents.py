@@ -33,6 +33,8 @@ def get_G_Tangents(self, Parameters):
 
     try:
         self.G_Mtx += self.G_uu_1
+        # print(self.G_Mtx)
+        # input()
     except FloatingPointError:
         print("ERROR. Encountered over/underflow error in G; occurred at element ID %i, t = %.2es and dt = %.2es." %(self.ID, Parameters.t, Parameters.dt))
         raise FloatingPointError
@@ -47,9 +49,10 @@ def get_G_uu_1(self, Parameters):
     # debug4 = np.einsum('...ai, ...AI', self.identity, self.C_inv)
     # debug5 = np.einsum('..., ...aiAI', Parameters.lambd*np.log(self.J) - Parameters.mu, debug3 + debug4)
 
+    # print(Parameters.lambd*np.einsum('...Aa,...Ii', self.F_inv, self.F_inv))
     self.dPdF = np.einsum('...ai, ...AI', self.identity, self.SPK)\
                 + Parameters.lambd*np.einsum('...Aa,...Ii', self.F_inv, self.F_inv)\
-                + np.einsum('..., ...aiAI', Parameters.lambd*np.log(self.J) - Parameters.mu,\
+                - np.einsum('..., ...aiAI', Parameters.lambd*np.log(self.J) - Parameters.mu,\
                                             (np.einsum('...Ai, ...Ia', self.F_inv, self.F_inv)\
                                              + np.einsum('...ai, ...AI', self.identity, self.C_inv)))
 
@@ -113,6 +116,9 @@ def get_G_uu_1(self, Parameters):
 
             self.dPdF_voigt[:,alpha,beta] = self.dPdF[:,i,I,a,A]
 
+    # print(self.dPdF_voigt)
+    # print(self.SPK)
+    # input()
     # 24 x 9 x 8
     # 9 x 24 x 8
     # 9 x 9 x 8
