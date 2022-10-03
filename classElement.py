@@ -286,10 +286,6 @@ class Element:
         self.set_u_global(a_D[self.DOF[0:24]])
         return
 
-    # def set_Global_Delta_D(self, a_delD):
-    #     # Update the increment at the element scale.
-    #     self.
-
     def apply_Local_BC(self, a_g):
         # Apply boundary conditions at the element scale.
         if np.any(self.DOF < 0):
