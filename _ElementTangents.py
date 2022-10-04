@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 2, 2022
+# Last Edit:    October 4, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -33,8 +33,6 @@ def get_G_Tangents(self, Parameters):
 
     try:
         self.G_Mtx += self.G_uu_1
-        # print(self.G_Mtx)
-        # input()
     except FloatingPointError:
         print("ERROR. Encountered over/underflow error in G; occurred at element ID %i, t = %.2es and dt = %.2es." %(self.ID, Parameters.t, Parameters.dt))
         raise FloatingPointError
@@ -43,12 +41,12 @@ def get_G_Tangents(self, Parameters):
 @register_method
 def get_G_uu_1(self, Parameters):
     # Compute G_uu_1.
-    self.dPdF = np.einsum('...ai, ...AI', self.identity, self.SPK)\
-                + Parameters.lambd*np.einsum('...ai,...AI', self.F_inv, self.F_inv)\
-                - np.einsum('..., ...aAiI', Parameters.lambd*np.log(self.J) - Parameters.mu,\
-                                            (np.einsum('...Ai, ...Ia', self.F_inv, self.F_inv)\
-                                             + np.einsum('...ai, ...AI', self.identity, self.C_inv)))
-    
+    self.dPdF = np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.SPK)\
+                + Parameters.lambd*np.einsum('...Aa, ...Ii -> ...iIaA', self.F_inv, self.F_inv)\
+                - np.einsum('..., ...iIaA -> ...iIaA', Parameters.lambd*np.log(self.J) - Parameters.mu,\
+                                             (np.einsum('...Ai, ...Ia -> ...iIaA', self.F_inv, self.F_inv)\
+                                              + np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.C_inv)))
+
     self.dPdF_voigt = np.zeros((8,9,9), dtype=np.float64)
     for alpha in range(9):
         if alpha == 0:
@@ -109,41 +107,5 @@ def get_G_uu_1(self, Parameters):
 
             self.dPdF_voigt[:,alpha,beta] = self.dPdF[:,i,I,a,A]
 
-    # print(self.dPdF_voigt)
-    # print(self.ID)
-    # np.savetxt('dPdF.txt', self.dPdF_voigt[0,:,:], delimiter=',', fmt='%1.5f')
-    # np.savetxt('Bu.txt', self.Bu[0,:,:], delimiter=',', fmt='%1.5f')
-    # input()
-    # 24 x 9 x 8
-    # 9 x 24 x 8
-    # 9 x 9 x 8
-    # print(self.dPdF_voigt.shape)
-    # print(self.Bu.shape, self.j)
-    # print(self.Bu.T.shape)
-    # weighted_dPdF = np.einsum('...ab, ...', self.dPdF_voigt, self.weights*self.j)
-    # weighted_dPdF = np.einsum('...ab, ...', self.dPdF_voigt, self.weights*self.j)
-    # print(weighted_dPdF.shape)
-    # print(self.Bu.shape)
-    # input()
-    # one = np.einsum('ja..., ...bj', self.Bu, weighted_dPdF)
-    # one = np.einsum('ja..., ...bj', self.Bu, weighted_dPdF)
-    # print(one.shape)
-    # print(one[0,:,:])
-    # print(self.Bu[0,:,:].T.shape)
-    # print(self.Bu[:,:,0].T)
-    # input()
-    # print(one.shape, self.Bu.shape)
-    # print(self.Bu.shape, self.dPdF_voigt.shape)
-    # self.G_uu_1 = np.einsum('...kj, jn...->...nk', one, self.Bu)
     self.G_uu_1 = np.einsum('kiI,kij,kjJ,k->IJ', self.Bu, self.dPdF_voigt, self.Bu, self.weights*self.j)
-    # print(self.G_uu_1[0,:,:])
-    # print(self.G_uu_1[0,:,:] == self.G_uu_1[0,:,:].T)
-    # print(self.G_uu_1.shape)
-    # input()
-    # print(self.Bu.shape)
-    # print(two.shape)
-    # print(one.shape)
-    # self.G_uu_1 = np.einsum('ijk, kjj, jik', self.Bu, weighted_dPdF, self.Bu, dtype=np.float64)
-    # print(self.G_uu_1.shape)
-    # sys.exit()
     return

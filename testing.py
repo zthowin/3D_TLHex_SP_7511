@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import classElement
 
@@ -14,8 +15,8 @@ class Parameters:
         self.rhoS_0 = 1e3
         self.rho_0 = self.ns*self.rhoS_0
 
-        # self.grav = -9.81
-        self.grav = 0
+        self.grav = 9.81
+        # self.grav = 0
 
         self.numDOF   = 4
         self.numEl    = 2
@@ -44,7 +45,7 @@ coordinates[1,:,:] = np.array([[0.0,  0.0,  0.05],
 LM       = np.ones((params.numElDOF, params.numEl), dtype=np.int32)
 LM      *= -1
 # Set the free DOFs
-LM[1,1]  = 3
+LM[2,1]  = 3
 LM[5,1]  = 0
 LM[8,1]  = 1
 LM[11,1] = 2
@@ -57,19 +58,18 @@ params.g_displ = -0.05
 
 params.TStart = 0.0
 params.TStop  = 1.0
-params.dt     = 1/50
+params.dt     = 1/20
 params.nsteps = int(np.round((params.TStop - params.TStart)/params.dt))
 params.t      = params.TStart
 params.n      = 0
 
 params.t_ramp = 1.0
 
-params.tolr = 1e-10
-params.tola = 1e-8
+params.tolr = 1e-8
+params.tola = 1e-6
 params.kmax = 5
 
 D      = np.zeros((params.numDOF), dtype=np.float64)
-# D_Last = np.zeros((params.numDOF), dtype=np.float64)
 
 DSolve = np.zeros((params.nsteps+1, params.numDOF), dtype=np.float64)
 isv_solve = np.zeros((params.nsteps+1,params.numEl,8,3,3,2), dtype=np.float64)
@@ -86,6 +86,7 @@ while params.t < params.TStop:
     params.t += params.dt
     params.n += 1
     print("t = %.2f seconds" %params.t)
+    print(params.n)
 
     gd_n      = gd
     g_n[14,1] = gd_n
@@ -106,7 +107,6 @@ while params.t < params.TStop:
     Rtol = 1
     normR = 1
     k = 0
-    # D_Last[:] = D[:]
 
     while Rtol > params.tolr and normR > params.tola:
 
@@ -116,14 +116,12 @@ while params.t < params.TStop:
         else:
             del_d = np.linalg.solve(dR, -R)
 
-        D      += del_d
-        # Delta_d = D - D_Last
+        D += del_d
 
         R  = np.zeros((params.numDOF), dtype=np.float64)
         dR = np.zeros((params.numDOF, params.numDOF), dtype=np.float64)
 
         for element_ID in range(params.numEl):
-
             #------------------------
             # Initialize the element.
             #------------------------
@@ -159,9 +157,9 @@ while params.t < params.TStop:
             # Compute the consistent tangent(s).
             #-----------------------------------
             element.compute_tangents(params)
-
-            print(element.ID,element.FPK)
-            input()
+            #--------------------------
+            # Perform element assembly.
+            #--------------------------
             for i in range(element.numDOF):
                 I = element.DOF[i]
 
@@ -185,8 +183,8 @@ while params.t < params.TStop:
             sys.exit("ERROR. Reached max number of iterations.")
 
 plt.figure(1)
-plt.plot(-stress_solve[1:,0,0,2,2,3],-stress_solve[1:,0,0,2,2,0]*1e-3, label=r'-$S_{33}$ vs. -$E_{33}$')
-plt.plot(-stress_solve[1:,0,0,2,2,4],-stress_solve[1:,0,0,2,2,2]*1e-3, label=r'-$s_{33}$ vs. -$e_{33}$')
-plt.plot(-stress_solve[1:,0,0,2,2,4],-stress_solve[1:,0,0,2,2,5]*1e-3, label=r'-$s_{33}$ vs. -$h_{33}$')
+plt.plot(-stress_solve[2:,0,0,2,2,3],-stress_solve[2:,0,0,2,2,0]*1e-3, label=r'-$S_{33}$ vs. -$E_{33}$')
+plt.plot(-stress_solve[2:,0,0,2,2,4],-stress_solve[2:,0,0,2,2,2]*1e-3, label=r'-$s_{33}$ vs. -$e_{33}$')
+plt.plot(-stress_solve[2:,0,0,2,2,5],-stress_solve[2:,0,0,2,2,2]*1e-3, label=r'-$s_{33}$ vs. -$h_{33}$')
 plt.legend()
 plt.show()

@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 2, 2022
+# Last Edit:    October 4, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -43,41 +43,6 @@ def get_G_Forces(self, Parameters):
 @register_method
 def get_G1(self):
     # Compute G_1^INT.
-    #------------------------------------------
-    # Generate voigt form of FPK stress tensor.
-    #------------------------------------------
-    # self.FPK_voigt = np.zeros((8,9), dtype=np.float64)
-    # for alpha in range(9):
-    #     if alpha == 0:
-    #         i = 0
-    #         I = 0
-    #     elif alpha == 1:
-    #         i = 0
-    #         I = 1
-    #     elif alpha == 2:
-    #         i = 0
-    #         I = 2
-    #     elif alpha == 3:
-    #         i = 1
-    #         I = 0
-    #     elif alpha == 4:
-    #         i = 1
-    #         I = 1
-    #     elif alpha == 5:
-    #         i = 1
-    #         I = 2
-    #     elif alpha == 6:
-    #         i = 2
-    #         I = 0
-    #     elif alpha == 7:
-    #         i = 2
-    #         I = 1
-    #     elif alpha == 8:
-    #         i = 2
-    #         I = 2
-    #     self.FPK_voigt[:,alpha] = self.FPK[:,i,I]
-    # self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.FPK_voigt, self.weights*self.j, dtype=np.float64)
-    # print(self.FPK.shape)
     self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.FPK.reshape((8,9)), self.weights*self.j, dtype=np.float64)
     return
 

@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 2, 2022
+# Last Edit:    October 4, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -58,13 +58,13 @@ class Element:
         if self.Gauss_Order == 2:
             const = 1/np.sqrt(3)
             self.points  = np.array([[-const, -const, -const],
-                                     [const, -const, -const],
-                                     [const, const, -const],
-                                     [-const,const, -const],
-                                     [-const, -const, const],
-                                     [const, -const, const],
-                                     [const, const, const],
-                                     [-const, const, const]],
+                                     [const,  -const, -const],
+                                     [const,   const, -const],
+                                     [-const,  const, -const],
+                                     [-const, -const,  const],
+                                     [const,  -const,  const],
+                                     [const,   const,  const],
+                                     [-const,  const,  const]],
                                     dtype=np.float64)
         else:
             sys.exit("ERROR. Only trilinear elements have been implemented; check quadrature order.")
@@ -84,16 +84,13 @@ class Element:
         return
 
     def evaluate_Shape_Functions(self):
-        # Initialize the shape functions used for interpolation.
-        # Calculations are vectorized across the 8 Gauss points.
-        
+        # Initialize the shape functions used for interpolation.        
         #--------------------------------
         # Grab local element coordinates.
         #--------------------------------
         self.xi   = self.points[:,0]
         self.eta  = self.points[:,1]
         self.zeta = self.points[:,2]
-        
         #---------
         # Set N_a.
         #---------
@@ -105,7 +102,6 @@ class Element:
         self.N6 = (1 + self.xi)*(1 - self.eta)*(1 + self.zeta)/8
         self.N7 = (1 + self.xi)*(1 + self.eta)*(1 + self.zeta)/8
         self.N8 = (1 - self.xi)*(1 + self.eta)*(1 + self.zeta)/8
-        
         #-----------------------------
         # Build shape function matrix.
         #-----------------------------
@@ -119,7 +115,6 @@ class Element:
             self.Nu[:, i, 15 + i] = self.N6
             self.Nu[:, i, 18 + i] = self.N7
             self.Nu[:, i, 21 + i] = self.N8
-        
         #----------------------------------
         # Calculate derivatives w.r.t. \xi.
         #----------------------------------
@@ -141,7 +136,6 @@ class Element:
         self.dN_dxi[:,5] = self.dN6_dxi
         self.dN_dxi[:,6] = self.dN7_dxi
         self.dN_dxi[:,7] = self.dN8_dxi
-
         #-----------------------------------
         # Calculate derivatives w.r.t. \eta.
         #-----------------------------------
@@ -163,7 +157,6 @@ class Element:
         self.dN_deta[:,5] = self.dN6_deta
         self.dN_deta[:,6] = self.dN7_deta
         self.dN_deta[:,7] = self.dN8_deta
-        
         #------------------------------------
         # Calculate derivatives w.r.t. \zeta.
         #------------------------------------
@@ -185,16 +178,13 @@ class Element:
         self.dN_dzeta[:,5] = self.dN6_dzeta
         self.dN_dzeta[:,6] = self.dN7_dzeta
         self.dN_dzeta[:,7] = self.dN8_dzeta
-        
         #-------------------
         # Compute jacobians.
         #-------------------
         self.get_Jacobian()
-        
         #----------------------------------
         # Compute shape function gradients.
         #----------------------------------
-        # print(self.Jeinv.shape, np.array([self.dN1_dxi, self.dN1_deta, self.dN1_dzeta]).T.shape)
         self.dN1_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN1_dxi, self.dN1_deta, self.dN1_dzeta]).T)
         self.dN2_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN2_dxi, self.dN2_deta, self.dN2_dzeta]).T)
         self.dN3_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN3_dxi, self.dN3_deta, self.dN3_dzeta]).T)
@@ -203,7 +193,6 @@ class Element:
         self.dN6_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN6_dxi, self.dN6_deta, self.dN6_dzeta]).T)
         self.dN7_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN7_dxi, self.dN7_deta, self.dN7_dzeta]).T)
         self.dN8_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN8_dxi, self.dN8_deta, self.dN8_dzeta]).T)
-
         #--------------------------------------
         # Construct strain-displacement matrix.
         #--------------------------------------
@@ -223,7 +212,7 @@ class Element:
             self.Bu[:, i, 1]  = self.dN1_dx[:,i-3]
             self.Bu[:, i, 4]  = self.dN2_dx[:,i-3]
             self.Bu[:, i, 7]  = self.dN3_dx[:,i-3]
-            self.Bu[:, i, 10]  = self.dN4_dx[:,i-3]
+            self.Bu[:, i, 10] = self.dN4_dx[:,i-3]
             self.Bu[:, i, 13] = self.dN5_dx[:,i-3]
             self.Bu[:, i, 16] = self.dN6_dx[:,i-3]
             self.Bu[:, i, 19] = self.dN7_dx[:,i-3]
@@ -243,16 +232,16 @@ class Element:
     
     def get_Jacobian(self):
         # Compute the element Jacobian.
-        self.dx_dxi   = np.einsum('ik, k', self.dN_dxi, self.coordinates[:,0])
-        self.dx_deta  = np.einsum('ik, k', self.dN_deta, self.coordinates[:,0])
+        self.dx_dxi   = np.einsum('ik, k', self.dN_dxi,   self.coordinates[:,0])
+        self.dx_deta  = np.einsum('ik, k', self.dN_deta,  self.coordinates[:,0])
         self.dx_dzeta = np.einsum('ik, k', self.dN_dzeta, self.coordinates[:,0])
         
-        self.dy_dxi   = np.einsum('ik, k', self.dN_dxi, self.coordinates[:,1])
-        self.dy_deta  = np.einsum('ik, k', self.dN_deta, self.coordinates[:,1])
+        self.dy_dxi   = np.einsum('ik, k', self.dN_dxi,   self.coordinates[:,1])
+        self.dy_deta  = np.einsum('ik, k', self.dN_deta,  self.coordinates[:,1])
         self.dy_dzeta = np.einsum('ik, k', self.dN_dzeta, self.coordinates[:,1])
         
-        self.dz_dxi   = np.einsum('ik, k', self.dN_dxi, self.coordinates[:,2])
-        self.dz_deta  = np.einsum('ik, k', self.dN_deta, self.coordinates[:,2])
+        self.dz_dxi   = np.einsum('ik, k', self.dN_dxi,   self.coordinates[:,2])
+        self.dz_deta  = np.einsum('ik, k', self.dN_deta,  self.coordinates[:,2])
         self.dz_dzeta = np.einsum('ik, k', self.dN_dzeta, self.coordinates[:,2])
                 
         self.Je        = np.zeros((8,3,3),dtype=np.float64)

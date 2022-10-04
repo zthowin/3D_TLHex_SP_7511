@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 2, 2022
+# Last Edit:    October 4, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -56,32 +56,6 @@ def get_F(self):
     shape = (8,3,3)
     self.identity = np.zeros(shape)
     np.einsum('ijj -> ij', self.identity)[:] = 1
-    #-----------------------
-    # Reverse voigt on dudX.
-    #-----------------------
-    # self.dudX_standard = np.zeros((8,3,3))
-    # for i in range(3):
-    #     for j in range(3):
-    #         if i == 0 and j == 0:
-    #             alpha = 0
-    #         elif i == 0 and j == 1:
-    #             alpha = 1
-    #         elif i == 0 and j == 2:
-    #             alpha = 2
-    #         elif i == 1 and j == 0:
-    #             alpha = 3
-    #         elif i == 1 and j == 1:
-    #             alpha = 4
-    #         elif i == 1 and j == 2:
-    #             alpha = 5
-    #         elif i == 2 and j == 0:
-    #             alpha = 6
-    #         elif i == 2 and j == 1:
-    #             alpha = 7
-    #         elif i == 2 and j == 2:
-    #             alpha = 8
-    #         self.dudX_standard[:,i,j] = self.dudX[:,alpha]
-    # self.F = self.identity + self.dudX_standard
     self.F = (self.identity + self.dudX.reshape((8,3,3)))
     return
 
