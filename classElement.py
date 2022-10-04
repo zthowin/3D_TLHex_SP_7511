@@ -109,16 +109,16 @@ class Element:
         #-----------------------------
         # Build shape function matrix.
         #-----------------------------
-        self.Nu = np.zeros((3, 24, 8), dtype=np.float64)
+        self.Nu = np.zeros((8, 3, 24), dtype=np.float64)
         for i in range(3):
-            self.Nu[i, 0 + i, :]  = self.N1
-            self.Nu[i, 3 + i, :]  = self.N2
-            self.Nu[i, 6 + i, :]  = self.N3
-            self.Nu[i, 9 + i, :]  = self.N4
-            self.Nu[i, 12 + i, :] = self.N5
-            self.Nu[i, 15 + i, :] = self.N6
-            self.Nu[i, 18 + i, :] = self.N7
-            self.Nu[i, 21 + i, :] = self.N8
+            self.Nu[:, i, 0 + i]  = self.N1
+            self.Nu[:, i, 3 + i]  = self.N2
+            self.Nu[:, i, 6 + i]  = self.N3
+            self.Nu[:, i, 9 + i]  = self.N4
+            self.Nu[:, i, 12 + i] = self.N5
+            self.Nu[:, i, 15 + i] = self.N6
+            self.Nu[:, i, 18 + i] = self.N7
+            self.Nu[:, i, 21 + i] = self.N8
         
         #----------------------------------
         # Calculate derivatives w.r.t. \xi.
@@ -133,14 +133,14 @@ class Element:
         self.dN8_dxi = -self.dN7_dxi
         
         self.dN_dxi      = np.zeros((8,8), dtype=np.float64)
-        self.dN_dxi[0,:] = self.dN1_dxi
-        self.dN_dxi[1,:] = self.dN2_dxi
-        self.dN_dxi[2,:] = self.dN3_dxi
-        self.dN_dxi[3,:] = self.dN4_dxi
-        self.dN_dxi[4,:] = self.dN5_dxi
-        self.dN_dxi[5,:] = self.dN6_dxi
-        self.dN_dxi[6,:] = self.dN7_dxi
-        self.dN_dxi[7,:] = self.dN8_dxi
+        self.dN_dxi[:,0] = self.dN1_dxi
+        self.dN_dxi[:,1] = self.dN2_dxi
+        self.dN_dxi[:,2] = self.dN3_dxi
+        self.dN_dxi[:,3] = self.dN4_dxi
+        self.dN_dxi[:,4] = self.dN5_dxi
+        self.dN_dxi[:,5] = self.dN6_dxi
+        self.dN_dxi[:,6] = self.dN7_dxi
+        self.dN_dxi[:,7] = self.dN8_dxi
 
         #-----------------------------------
         # Calculate derivatives w.r.t. \eta.
@@ -155,14 +155,14 @@ class Element:
         self.dN8_deta = -self.dN5_deta
         
         self.dN_deta      = np.zeros((8,8), dtype=np.float64)
-        self.dN_deta[0,:] = self.dN1_deta
-        self.dN_deta[1,:] = self.dN2_deta
-        self.dN_deta[2,:] = self.dN3_deta
-        self.dN_deta[3,:] = self.dN4_deta
-        self.dN_deta[4,:] = self.dN5_deta
-        self.dN_deta[5,:] = self.dN6_deta
-        self.dN_deta[6,:] = self.dN7_deta
-        self.dN_deta[7,:] = self.dN8_deta
+        self.dN_deta[:,0] = self.dN1_deta
+        self.dN_deta[:,1] = self.dN2_deta
+        self.dN_deta[:,2] = self.dN3_deta
+        self.dN_deta[:,3] = self.dN4_deta
+        self.dN_deta[:,4] = self.dN5_deta
+        self.dN_deta[:,5] = self.dN6_deta
+        self.dN_deta[:,6] = self.dN7_deta
+        self.dN_deta[:,7] = self.dN8_deta
         
         #------------------------------------
         # Calculate derivatives w.r.t. \zeta.
@@ -177,14 +177,14 @@ class Element:
         self.dN8_dzeta = -self.dN4_dzeta
         
         self.dN_dzeta      = np.zeros((8,8), dtype=np.float64)
-        self.dN_dzeta[0,:] = self.dN1_dzeta
-        self.dN_dzeta[1,:] = self.dN2_dzeta
-        self.dN_dzeta[2,:] = self.dN3_dzeta
-        self.dN_dzeta[3,:] = self.dN4_dzeta
-        self.dN_dzeta[4,:] = self.dN5_dzeta
-        self.dN_dzeta[5,:] = self.dN6_dzeta
-        self.dN_dzeta[6,:] = self.dN7_dzeta
-        self.dN_dzeta[7,:] = self.dN8_dzeta
+        self.dN_dzeta[:,0] = self.dN1_dzeta
+        self.dN_dzeta[:,1] = self.dN2_dzeta
+        self.dN_dzeta[:,2] = self.dN3_dzeta
+        self.dN_dzeta[:,3] = self.dN4_dzeta
+        self.dN_dzeta[:,4] = self.dN5_dzeta
+        self.dN_dzeta[:,5] = self.dN6_dzeta
+        self.dN_dzeta[:,6] = self.dN7_dzeta
+        self.dN_dzeta[:,7] = self.dN8_dzeta
         
         #-------------------
         # Compute jacobians.
@@ -194,84 +194,84 @@ class Element:
         #----------------------------------
         # Compute shape function gradients.
         #----------------------------------
-        self.dN1_dx = np.einsum('ij..., j...', self.Jeinv, np.array([self.dN1_dxi, self.dN1_deta, self.dN1_dzeta]))
-        self.dN2_dx = np.einsum('ij..., j...', self.Jeinv, np.array([self.dN2_dxi, self.dN2_deta, self.dN2_dzeta]))
-        self.dN3_dx = np.einsum('ij..., j...', self.Jeinv, np.array([self.dN3_dxi, self.dN3_deta, self.dN3_dzeta]))
-        self.dN4_dx = np.einsum('ij..., j...', self.Jeinv, np.array([self.dN4_dxi, self.dN4_deta, self.dN4_dzeta]))
-        self.dN5_dx = np.einsum('ij..., j...', self.Jeinv, np.array([self.dN5_dxi, self.dN5_deta, self.dN5_dzeta]))
-        self.dN6_dx = np.einsum('ij..., j...', self.Jeinv, np.array([self.dN6_dxi, self.dN6_deta, self.dN6_dzeta]))
-        self.dN7_dx = np.einsum('ij..., j...', self.Jeinv, np.array([self.dN7_dxi, self.dN7_deta, self.dN7_dzeta]))
-        self.dN8_dx = np.einsum('ij..., j...', self.Jeinv, np.array([self.dN8_dxi, self.dN8_deta, self.dN8_dzeta]))
+        # print(self.Jeinv.shape, np.array([self.dN1_dxi, self.dN1_deta, self.dN1_dzeta]).T.shape)
+        self.dN1_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN1_dxi, self.dN1_deta, self.dN1_dzeta]).T)
+        self.dN2_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN2_dxi, self.dN2_deta, self.dN2_dzeta]).T)
+        self.dN3_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN3_dxi, self.dN3_deta, self.dN3_dzeta]).T)
+        self.dN4_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN4_dxi, self.dN4_deta, self.dN4_dzeta]).T)
+        self.dN5_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN5_dxi, self.dN5_deta, self.dN5_dzeta]).T)
+        self.dN6_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN6_dxi, self.dN6_deta, self.dN6_dzeta]).T)
+        self.dN7_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN7_dxi, self.dN7_deta, self.dN7_dzeta]).T)
+        self.dN8_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN8_dxi, self.dN8_deta, self.dN8_dzeta]).T)
 
         #--------------------------------------
         # Construct strain-displacement matrix.
         #--------------------------------------
-        self.Bu = np.zeros((9, 24, 8), dtype=np.float64)
+        self.Bu = np.zeros((8, 9, 24), dtype=np.float64)
 
         for i in range(3):
-            self.Bu[i, 0, :]  = self.dN1_dx[:,i]
-            self.Bu[i, 3, :]  = self.dN2_dx[:,i]
-            self.Bu[i, 6, :]  = self.dN3_dx[:,i]
-            self.Bu[i, 9, :]  = self.dN4_dx[:,i]
-            self.Bu[i, 12, :] = self.dN5_dx[:,i]
-            self.Bu[i, 15, :] = self.dN6_dx[:,i]
-            self.Bu[i, 18, :] = self.dN7_dx[:,i]
-            self.Bu[i, 21, :] = self.dN8_dx[:,i]
+            self.Bu[:, i, 0]  = self.dN1_dx[:,i]
+            self.Bu[:, i, 3]  = self.dN2_dx[:,i]
+            self.Bu[:, i, 6]  = self.dN3_dx[:,i]
+            self.Bu[:, i, 9]  = self.dN4_dx[:,i]
+            self.Bu[:, i, 12] = self.dN5_dx[:,i]
+            self.Bu[:, i, 15] = self.dN6_dx[:,i]
+            self.Bu[:, i, 18] = self.dN7_dx[:,i]
+            self.Bu[:, i, 21] = self.dN8_dx[:,i]
 
         for i in range(3,6):
-            self.Bu[i, 1, :]  = self.dN1_dx[:,i-3]
-            self.Bu[i, 3, :]  = self.dN2_dx[:,i-3]
-            self.Bu[i, 7, :]  = self.dN3_dx[:,i-3]
-            self.Bu[i, 10, :] = self.dN4_dx[:,i-3]
-            self.Bu[i, 12, :] = self.dN5_dx[:,i-3]
-            self.Bu[i, 15, :] = self.dN6_dx[:,i-3]
-            self.Bu[i, 18, :] = self.dN7_dx[:,i-3]
-            self.Bu[i, 21, :] = self.dN8_dx[:,i-3]
+            self.Bu[:, i, 1]  = self.dN1_dx[:,i-3]
+            self.Bu[:, i, 4]  = self.dN2_dx[:,i-3]
+            self.Bu[:, i, 7]  = self.dN3_dx[:,i-3]
+            self.Bu[:, i, 10]  = self.dN4_dx[:,i-3]
+            self.Bu[:, i, 13] = self.dN5_dx[:,i-3]
+            self.Bu[:, i, 16] = self.dN6_dx[:,i-3]
+            self.Bu[:, i, 19] = self.dN7_dx[:,i-3]
+            self.Bu[:, i, 22] = self.dN8_dx[:,i-3]
 
         for i in range(6,9):
-            self.Bu[i, 2, :]  = self.dN1_dx[:,i-6]
-            self.Bu[i, 5, :]  = self.dN2_dx[:,i-6]
-            self.Bu[i, 8, :]  = self.dN3_dx[:,i-6]
-            self.Bu[i, 11, :] = self.dN4_dx[:,i-6]
-            self.Bu[i, 14, :] = self.dN5_dx[:,i-6]
-            self.Bu[i, 17, :] = self.dN6_dx[:,i-6]
-            self.Bu[i, 20, :] = self.dN7_dx[:,i-6]
-            self.Bu[i, 23, :] = self.dN8_dx[:,i-6]
+            self.Bu[:, i, 2]  = self.dN1_dx[:,i-6]
+            self.Bu[:, i, 5]  = self.dN2_dx[:,i-6]
+            self.Bu[:, i, 8]  = self.dN3_dx[:,i-6]
+            self.Bu[:, i, 11] = self.dN4_dx[:,i-6]
+            self.Bu[:, i, 14] = self.dN5_dx[:,i-6]
+            self.Bu[:, i, 17] = self.dN6_dx[:,i-6]
+            self.Bu[:, i, 20] = self.dN7_dx[:,i-6]
+            self.Bu[:, i, 23] = self.dN8_dx[:,i-6]
         
         return
     
     def get_Jacobian(self):
         # Compute the element Jacobian.
+        self.dx_dxi   = np.einsum('ik, k', self.dN_dxi, self.coordinates[:,0])
+        self.dx_deta  = np.einsum('ik, k', self.dN_deta, self.coordinates[:,0])
+        self.dx_dzeta = np.einsum('ik, k', self.dN_dzeta, self.coordinates[:,0])
         
-        self.dx_dxi   = np.einsum('ik, i', self.dN_dxi, self.coordinates[:,0])
-        self.dx_deta  = np.einsum('ik, i', self.dN_deta, self.coordinates[:,0])
-        self.dx_dzeta = np.einsum('ik, i', self.dN_dzeta, self.coordinates[:,0])
+        self.dy_dxi   = np.einsum('ik, k', self.dN_dxi, self.coordinates[:,1])
+        self.dy_deta  = np.einsum('ik, k', self.dN_deta, self.coordinates[:,1])
+        self.dy_dzeta = np.einsum('ik, k', self.dN_dzeta, self.coordinates[:,1])
         
-        self.dy_dxi   = np.einsum('ik, i', self.dN_dxi, self.coordinates[:,1])
-        self.dy_deta  = np.einsum('ik, i', self.dN_deta, self.coordinates[:,1])
-        self.dy_dzeta = np.einsum('ik, i', self.dN_dzeta, self.coordinates[:,1])
-        
-        self.dz_dxi   = np.einsum('ik, i', self.dN_dxi, self.coordinates[:,2])
-        self.dz_deta  = np.einsum('ik, i', self.dN_deta, self.coordinates[:,2])
-        self.dz_dzeta = np.einsum('ik, i', self.dN_dzeta, self.coordinates[:,2])
+        self.dz_dxi   = np.einsum('ik, k', self.dN_dxi, self.coordinates[:,2])
+        self.dz_deta  = np.einsum('ik, k', self.dN_deta, self.coordinates[:,2])
+        self.dz_dzeta = np.einsum('ik, k', self.dN_dzeta, self.coordinates[:,2])
                 
-        self.Je        = np.zeros((3,3,8),dtype=np.float64)
-        self.Je[0,0,:] = self.dx_dxi
-        self.Je[0,1,:] = self.dx_deta
-        self.Je[0,2,:] = self.dx_dzeta
-        self.Je[1,0,:] = self.dy_dxi
-        self.Je[1,1,:] = self.dy_deta
-        self.Je[1,2,:] = self.dy_dzeta
-        self.Je[2,0,:] = self.dz_dxi
-        self.Je[2,1,:] = self.dz_deta
-        self.Je[2,2,:] = self.dz_dzeta
+        self.Je        = np.zeros((8,3,3),dtype=np.float64)
+        self.Je[:,0,0] = self.dx_dxi
+        self.Je[:,0,1] = self.dx_deta
+        self.Je[:,0,2] = self.dx_dzeta
+        self.Je[:,1,0] = self.dy_dxi
+        self.Je[:,1,1] = self.dy_deta
+        self.Je[:,1,2] = self.dy_dzeta
+        self.Je[:,2,0] = self.dz_dxi
+        self.Je[:,2,1] = self.dz_deta
+        self.Je[:,2,2] = self.dz_dzeta
         
         self.j     = np.zeros(8, dtype=np.float64)
-        self.Jeinv = np.zeros((3,3,8), dtype=np.float64)
+        self.Jeinv = np.zeros((8,3,3), dtype=np.float64)
 
         for i in range(8):
-            self.j[i]     = np.linalg.det(self.Je[:,:,i])
-            self.Jeinv[:,:,i] = np.linalg.inv(self.Je[:,:,i])
+            self.j[i]          = np.linalg.det(self.Je[i,:,:])
+            self.Jeinv[i,:,:,] = np.linalg.inv(self.Je[i,:,:])
         
         return
 
