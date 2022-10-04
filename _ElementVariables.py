@@ -44,7 +44,7 @@ def compute_variables(self, Parameters):
 @register_method
 def get_dudX(self):
     # Compute solid displacement gradient.
-    self.dudX = np.einsum('ij..., j...', self.Bu, self.u_global, dtype=np.float64)
+    self.dudX = np.einsum('...ij, j -> ...i', self.Bu, self.u_global, dtype=np.float64)
     return
 
 @register_method
@@ -52,7 +52,7 @@ def get_F(self):
     # Reshape the identity matrix for all 8 Gauss points.
     shape = (8,3,3)
     self.identity = np.zeros(shape)
-    np.einsum('ijj->ij', self.identity)[:] = 1
+    np.einsum('ijj -> ij', self.identity)[:] = 1
     # Compute deformation gradient.
     self.F = (self.identity + self.dudX.reshape((8,3,3)))
     return
@@ -72,7 +72,7 @@ def get_J(self):
 @register_method
 def get_C(self):
     # Compute right Cauchy-Green tensor.
-    self.C = np.einsum('...iI, ...iJ', self.F, self.F, dtype=np.float64)
+    self.C = np.einsum('...iI, ...iJ -> ...IJ', self.F, self.F, dtype=np.float64)
     return
 
 @register_method
@@ -84,26 +84,27 @@ def get_C_inv(self):
 @register_method
 def get_SPK(self, Parameters):
     # Compute second Piola-Kirchoff stress tensor.
-    self.SPK = Parameters.mu*self.identity + np.einsum('..., ...IJ', Parameters.lambd*np.log(self.J) - Parameters.mu,\
-                                                                     self.C_inv, dtype=np.float64)
+    self.SPK = Parameters.mu*self.identity + np.einsum('..., ...IJ -> ...IJ',\
+                                                       Parameters.lambd*np.log(self.J) - Parameters.mu,\
+                                                       self.C_inv, dtype=np.float64)
     return
 
 @register_method
 def get_FPK(self):
     # Compute first Piola-Kirchoff stress tensor.
-    self.FPK = np.einsum('...iI, ...JI', self.F, self.SPK, dtype=np.float64)
+    self.FPK = np.einsum('...iI, ...IJ -> ...iI', self.F, self.SPK, dtype=np.float64)
     return
 
 @register_method
 def get_Cauchy(self):
     # Compute Cauchy stress tensor.
-    self.sigma = np.einsum('...iI,...jI,...', self.FPK, self.F, 1/self.J, dtype=np.float64)
+    self.sigma = np.einsum('...iI, ...jI, ... -> ...ij', self.FPK, self.F, 1/self.J, dtype=np.float64)
     return
 
 @register_method
 def get_b(self):
     # Compute left Cauchy-Green tensor.
-    self.b = np.einsum('...iI,...jI', self.F, self.F, dtype=np.float64)
+    self.b = np.einsum('...iI, ...jI -> ...ij', self.F, self.F, dtype=np.float64)
     return
 
 @register_method
@@ -133,7 +134,7 @@ def get_Hencky(self):
 @register_method
 def get_rho(self):
     # Compute mass density in current configuration.
-    self.rho = np.einsum('..., ...I', self.J, self.rho_0, dtype=np.float64)
+    self.rho = np.einsum('..., ...i -> ...i', self.J, self.rho_0, dtype=np.float64)
     return
 
 @register_method

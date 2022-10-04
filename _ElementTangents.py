@@ -43,21 +43,12 @@ def get_G_Tangents(self, Parameters):
 @register_method
 def get_G_uu_1(self, Parameters):
     # Compute G_uu_1.
-    # debug1 = np.einsum('...ai, ...AI', self.identity, self.SPK)
-    # debug2 = Parameters.lambd*np.einsum('...Aa,...Ii', self.F_inv, self.F_inv) 
-    # debug3 = np.einsum('...Ai, ...Ia', self.F_inv, self.F_inv)
-    # debug4 = np.einsum('...ai, ...AI', self.identity, self.C_inv)
-    # debug5 = np.einsum('..., ...aiAI', Parameters.lambd*np.log(self.J) - Parameters.mu, debug3 + debug4)
-
-    # print(Parameters.lambd*np.einsum('...Aa,...Ii', self.F_inv, self.F_inv))
     self.dPdF = np.einsum('...ai, ...AI', self.identity, self.SPK)\
                 + Parameters.lambd*np.einsum('...ai,...AI', self.F_inv, self.F_inv)\
                 - np.einsum('..., ...aAiI', Parameters.lambd*np.log(self.J) - Parameters.mu,\
                                             (np.einsum('...Ai, ...Ia', self.F_inv, self.F_inv)\
                                              + np.einsum('...ai, ...AI', self.identity, self.C_inv)))
-
-    # print(self.dPdF)
-    # input()
+    
     self.dPdF_voigt = np.zeros((8,9,9), dtype=np.float64)
     for alpha in range(9):
         if alpha == 0:
@@ -119,6 +110,9 @@ def get_G_uu_1(self, Parameters):
             self.dPdF_voigt[:,alpha,beta] = self.dPdF[:,i,I,a,A]
 
     # print(self.dPdF_voigt)
+    # print(self.ID)
+    # np.savetxt('dPdF.txt', self.dPdF_voigt[0,:,:], delimiter=',', fmt='%1.5f')
+    # np.savetxt('Bu.txt', self.Bu[0,:,:], delimiter=',', fmt='%1.5f')
     # input()
     # 24 x 9 x 8
     # 9 x 24 x 8
@@ -127,23 +121,25 @@ def get_G_uu_1(self, Parameters):
     # print(self.Bu.shape, self.j)
     # print(self.Bu.T.shape)
     # weighted_dPdF = np.einsum('...ab, ...', self.dPdF_voigt, self.weights*self.j)
-    weighted_dPdF = np.einsum('...ab, ...', self.dPdF_voigt, self.weights*self.j)
+    # weighted_dPdF = np.einsum('...ab, ...', self.dPdF_voigt, self.weights*self.j)
     # print(weighted_dPdF.shape)
     # print(self.Bu.shape)
     # input()
-    one = np.einsum('ja..., ...bj', self.Bu, weighted_dPdF)
+    # one = np.einsum('ja..., ...bj', self.Bu, weighted_dPdF)
     # one = np.einsum('ja..., ...bj', self.Bu, weighted_dPdF)
     # print(one.shape)
     # print(one[0,:,:])
     # print(self.Bu[0,:,:].T.shape)
     # print(self.Bu[:,:,0].T)
     # input()
-    print(one.shape, self.Bu.shape)
+    # print(one.shape, self.Bu.shape)
+    # print(self.Bu.shape, self.dPdF_voigt.shape)
     # self.G_uu_1 = np.einsum('...kj, jn...->...nk', one, self.Bu)
-    self.G_uu_1 = np.einsum('iI...,...IA,Aj...,...->...ij', self.Bu, self.dPdF_voigt, self.Bu, self.weights*self.j)
-    print(self.G_uu_1[0,:,:])
+    self.G_uu_1 = np.einsum('kiI,kij,kjJ,k->IJ', self.Bu, self.dPdF_voigt, self.Bu, self.weights*self.j)
+    # print(self.G_uu_1[0,:,:])
+    # print(self.G_uu_1[0,:,:] == self.G_uu_1[0,:,:].T)
     # print(self.G_uu_1.shape)
-    input()
+    # input()
     # print(self.Bu.shape)
     # print(two.shape)
     # print(one.shape)

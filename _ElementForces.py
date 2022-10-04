@@ -45,13 +45,17 @@ def get_G_Forces(self, Parameters):
 @register_method
 def get_G1(self):
     # Compute G_1^INT.
-    self.G_1 = np.einsum('ijk, ki', self.Bu, np.einsum('...I, ...', self.FPK.reshape((8,9)), self.weights*self.j), dtype=np.float64)
+    self.G_1 = np.einsum('kij, ki -> j', self.Bu, np.einsum('...I, ... -> ...I',\
+                                                            self.FPK.reshape((8,9)), self.weights*self.j),\
+                                                            dtype=np.float64)
     return
 
 @register_method
 def get_G2(self, Parameters):
     # Compute G_2^INT.
-    self.G_2 = np.einsum('ijk, ki', self.Nu, np.einsum('...i, ...', self.rho, self.weights*self.j*Parameters.grav), dtype=np.float64)
-    # print(self.G_2)
-    # self.G_2 = np.einsum('ijk, ki', self.Nu, self.rho*self.weights*self.j*np.array([0,0,Parameters.grav]))
+    self.grav_body       = np.zeros((8,3))
+    self.grav_body[:,2]  = -Parameters.grav
+    self.G_2 = np.einsum('kij, ki -> j', self.Nu, np.einsum('...i, ...i, ... -> ...i',\
+                                                            self.rho, self.grav_body, self.weights*self.j),\
+                                                            dtype=np.float64)
     return
