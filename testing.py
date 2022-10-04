@@ -53,7 +53,7 @@ LM[17,0] = 0
 LM[20,0] = 1
 LM[23,0] = 2
 
-params.g_displ = -0.01
+params.g_displ = -0.05
 
 params.TStart = 0.0
 params.TStop  = 1.0
@@ -66,10 +66,10 @@ params.t_ramp = 1.0
 
 params.tolr = 1e-10
 params.tola = 1e-8
-params.kmax = 20
+params.kmax = 5
 
 D      = np.zeros((params.numDOF), dtype=np.float64)
-D_Last = np.zeros((params.numDOF), dtype=np.float64)
+# D_Last = np.zeros((params.numDOF), dtype=np.float64)
 
 DSolve = np.zeros((params.nsteps+1, params.numDOF), dtype=np.float64)
 isv_solve = np.zeros((params.nsteps+1,params.numEl,8,3,3,2), dtype=np.float64)
@@ -106,7 +106,7 @@ while params.t < params.TStop:
     Rtol = 1
     normR = 1
     k = 0
-    D_Last[:] = D[:]
+    # D_Last[:] = D[:]
 
     while Rtol > params.tolr and normR > params.tola:
 
@@ -117,7 +117,7 @@ while params.t < params.TStop:
             del_d = np.linalg.solve(dR, -R)
 
         D      += del_d
-        Delta_d = D - D_Last
+        # Delta_d = D - D_Last
 
         R  = np.zeros((params.numDOF), dtype=np.float64)
         dR = np.zeros((params.numDOF, params.numDOF), dtype=np.float64)
@@ -160,6 +160,8 @@ while params.t < params.TStop:
             #-----------------------------------
             element.compute_tangents(params)
 
+            print(element.ID,element.FPK)
+            input()
             for i in range(element.numDOF):
                 I = element.DOF[i]
 
@@ -183,5 +185,8 @@ while params.t < params.TStop:
             sys.exit("ERROR. Reached max number of iterations.")
 
 plt.figure(1)
-plt.plot(-stress_solve[:,0,0,2,2,3],-stress_solve[:,0,0,2,2,0]*1e-3)
+plt.plot(-stress_solve[1:,0,0,2,2,3],-stress_solve[1:,0,0,2,2,0]*1e-3, label=r'-$S_{33}$ vs. -$E_{33}$')
+plt.plot(-stress_solve[1:,0,0,2,2,4],-stress_solve[1:,0,0,2,2,2]*1e-3, label=r'-$s_{33}$ vs. -$e_{33}$')
+plt.plot(-stress_solve[1:,0,0,2,2,4],-stress_solve[1:,0,0,2,2,5]*1e-3, label=r'-$s_{33}$ vs. -$h_{33}$')
+plt.legend()
 plt.show()
