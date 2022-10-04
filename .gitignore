@@ -1,0 +1,9 @@
+*.zip
+*.sh
+*.e*
+*core*
+*.so
+*.c
+*.out
+*__pycache__*
+*.pyc
