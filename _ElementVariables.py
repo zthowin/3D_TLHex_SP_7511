@@ -23,7 +23,7 @@ register_method = Lib.register_method(__methods__)
 @register_method
 def compute_variables(self, Parameters):
     # Compute variables related to strains and stresses.
-    self.get_dudX()
+    self.get_dudX(Parameters)
     self.get_F()
     self.get_J()
     self.get_F_inv()
@@ -42,18 +42,46 @@ def compute_variables(self, Parameters):
     return
 
 @register_method
-def get_dudX(self):
+def get_dudX(self, Parameters):
     # Compute solid displacement gradient.
     self.dudX = np.einsum('...ij, j -> ...i', self.Bu, self.u_global, dtype=np.float64)
     return
 
 @register_method
 def get_F(self):
+    # Compute deformation gradient.
+    #----------------------------------------------------
     # Reshape the identity matrix for all 8 Gauss points.
+    #----------------------------------------------------
     shape = (8,3,3)
     self.identity = np.zeros(shape)
     np.einsum('ijj -> ij', self.identity)[:] = 1
-    # Compute deformation gradient.
+    #-----------------------
+    # Reverse voigt on dudX.
+    #-----------------------
+    # self.dudX_standard = np.zeros((8,3,3))
+    # for i in range(3):
+    #     for j in range(3):
+    #         if i == 0 and j == 0:
+    #             alpha = 0
+    #         elif i == 0 and j == 1:
+    #             alpha = 1
+    #         elif i == 0 and j == 2:
+    #             alpha = 2
+    #         elif i == 1 and j == 0:
+    #             alpha = 3
+    #         elif i == 1 and j == 1:
+    #             alpha = 4
+    #         elif i == 1 and j == 2:
+    #             alpha = 5
+    #         elif i == 2 and j == 0:
+    #             alpha = 6
+    #         elif i == 2 and j == 1:
+    #             alpha = 7
+    #         elif i == 2 and j == 2:
+    #             alpha = 8
+    #         self.dudX_standard[:,i,j] = self.dudX[:,alpha]
+    # self.F = self.identity + self.dudX_standard
     self.F = (self.identity + self.dudX.reshape((8,3,3)))
     return
 
@@ -140,6 +168,5 @@ def get_rho(self):
 @register_method
 def get_rho_0(self, Parameters):
     # Compute mass density in reference configuration.
-    # Should be constant for single-phase (i.e., classical continuum mechanics) materials.
     self.rho_0 = Parameters.rhoS_0*np.ones((8,3), dtype=np.float64)
     return

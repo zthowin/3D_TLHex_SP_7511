@@ -29,14 +29,12 @@ def compute_forces(self, Parameters):
 @register_method
 def get_G_Forces(self, Parameters):
     # Assemble solid internal force vectors.
+    self.G_int = np.zeros((24), dtype=np.float64)
     self.get_G1()
     self.get_G2(Parameters)
 
     try:
-        self.G_int = self.G_1 + self.G_2
-        # print(self.G_1)
-        # print(self.G_2)
-        # input()
+        self.G_int += self.G_1 + self.G_2
     except FloatingPointError:
         print("ERROR. Encountered over/underflow error in G; occurred at element ID %i, t = %.2es and dt = %.2es." %(self.ID, Parameters.t, Parameters.dt))
         raise FloatingPointError
@@ -45,9 +43,42 @@ def get_G_Forces(self, Parameters):
 @register_method
 def get_G1(self):
     # Compute G_1^INT.
-    self.G_1 = np.einsum('kij, ki -> j', self.Bu, np.einsum('...I, ... -> ...I',\
-                                                            self.FPK.reshape((8,9)), self.weights*self.j),\
-                                                            dtype=np.float64)
+    #------------------------------------------
+    # Generate voigt form of FPK stress tensor.
+    #------------------------------------------
+    # self.FPK_voigt = np.zeros((8,9), dtype=np.float64)
+    # for alpha in range(9):
+    #     if alpha == 0:
+    #         i = 0
+    #         I = 0
+    #     elif alpha == 1:
+    #         i = 0
+    #         I = 1
+    #     elif alpha == 2:
+    #         i = 0
+    #         I = 2
+    #     elif alpha == 3:
+    #         i = 1
+    #         I = 0
+    #     elif alpha == 4:
+    #         i = 1
+    #         I = 1
+    #     elif alpha == 5:
+    #         i = 1
+    #         I = 2
+    #     elif alpha == 6:
+    #         i = 2
+    #         I = 0
+    #     elif alpha == 7:
+    #         i = 2
+    #         I = 1
+    #     elif alpha == 8:
+    #         i = 2
+    #         I = 2
+    #     self.FPK_voigt[:,alpha] = self.FPK[:,i,I]
+    # self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.FPK_voigt, self.weights*self.j, dtype=np.float64)
+    # print(self.FPK.shape)
+    self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.FPK.reshape((8,9)), self.weights*self.j, dtype=np.float64)
     return
 
 @register_method
