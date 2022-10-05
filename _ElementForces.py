@@ -32,13 +32,13 @@ def get_G_Forces(self, Parameters):
     self.G_int = np.zeros((24), dtype=np.float64)
     self.get_G1()
     self.get_G2(Parameters)
-    if np.abs(Parameters.traction) > 0:
+    if np.abs(Parameters.traction) > 0 and self.ID == 1:
         self.G_ext = np.zeros((24), dtype=np.float64)
         self.get_GEXT(Parameters)
 
     try:
         self.G_int += self.G_1 + self.G_2
-        if np.abs(Parameters.traction) > 0:
+        if np.abs(Parameters.traction) > 0 and self.ID == 1:
             self.G_ext += self.G_EXT
     except FloatingPointError:
         print("ERROR. Encountered over/underflow error in G; occurred at element ID %i, t = %.2es and dt = %.2es." %(self.ID, Parameters.t, Parameters.dt))
@@ -48,6 +48,10 @@ def get_G_Forces(self, Parameters):
 @register_method
 def get_G1(self):
     # Compute G_1^INT.
+    #---------------------------------------------------------------------------
+    # Note that the reshape is arbitrary; if we did not have 1D uniaxial strain,
+    # we would need to use Voigt notation (here, du_i/dX_j = du_j/dX_i).
+    #---------------------------------------------------------------------------
     self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.FPK.reshape((8,9)), self.weights*self.j, dtype=np.float64)
     return
 
