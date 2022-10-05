@@ -59,7 +59,7 @@ LM[17,1] = 4
 LM[20,1] = 5
 LM[23,1] = 6
 
-params.g_displ = -0.05
+params.g_displ = -0.0
 params.traction = 1e4
 
 params.TStart = 0.0
