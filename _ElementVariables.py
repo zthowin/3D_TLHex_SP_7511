@@ -56,6 +56,10 @@ def get_F(self):
     shape = (8,3,3)
     self.identity = np.zeros(shape)
     np.einsum('ijj -> ij', self.identity)[:] = 1
+    #---------------------------------------------------------------------------
+    # Note that the dudX reshape is arbitrary; if we did not have 1D uniaxial
+    # strain, we would need to use Voigt notation (here, du_i/dX_j = du_j/dX_i).
+    #---------------------------------------------------------------------------
     self.F = (self.identity + self.dudX.reshape((8,3,3)))
     return
 
