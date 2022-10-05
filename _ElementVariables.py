@@ -37,6 +37,8 @@ def compute_variables(self, Parameters):
     self.get_e()
     self.get_Hencky()
     self.get_Cauchy()
+    self.get_mean_Cauchy()
+    self.get_von_Mises()
     self.get_rho_0(Parameters)
     self.get_rho()
     return
@@ -105,6 +107,18 @@ def get_FPK(self):
 def get_Cauchy(self):
     # Compute Cauchy stress tensor.
     self.sigma = np.einsum('...iI, ...jI, ... -> ...ij', self.FPK, self.F, 1/self.J, dtype=np.float64)
+    return
+
+@register_method
+def get_mean_Cauchy(self):
+    # Compute the mean Cauchy stress, i.e., thermodynamic pressure.
+    self.sigma_mean = (1/3)*np.einsum('...ii', self.sigma)
+    return
+
+@register_method
+def get_von_Mises(self):
+    # Compute the von Mises stress.
+    self.von_mises = np.sqrt(3/2)*np.linalg.norm((self.sigma - np.einsum('..., ...ij -> ...ij', self.sigma_mean, self.identity)))
     return
 
 @register_method

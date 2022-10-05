@@ -78,7 +78,7 @@ params.kmax = 5
 D      = np.zeros((params.numDOF), dtype=np.float64)
 
 DSolve = np.zeros((params.nsteps+1, params.numDOF), dtype=np.float64)
-isv_solve = np.zeros((params.nsteps+1,params.numEl,8,3,3,2), dtype=np.float64)
+isv_solve = np.zeros((params.nsteps+1,params.numEl,8,2), dtype=np.float64)
 stress_solve = np.zeros((params.nsteps+1,params.numEl,8,3,3,6), dtype=np.float64)
 
 gd_n = 0
@@ -157,8 +157,8 @@ while params.t < params.TStop:
             stress_solve[params.n,element.ID,:,:,:,4] = element.e
             stress_solve[params.n,element.ID,:,:,:,5] = element.Hencky
 
-            # isv_solve[n,:,:,0,:] = np.trace(element.sigma)/3
-            # isv_solve[n,:,:,1,:] = np.sqrt(3/2)*np.linalg.norm(element.sigma - np.trace(element.sigma)/3*element.identity
+            isv_solve[params.n,element.ID,:,0] = element.sigma_mean
+            isv_solve[params.n,element.ID,:,1] = element.von_mises
             #--------------------------------
             # Compute internal force vectors.
             #--------------------------------
