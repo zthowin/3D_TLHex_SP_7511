@@ -24,6 +24,7 @@ register_method = Lib.register_method(__methods__)
 def compute_tangents(self, Parameters):
     # Compute element tangents.
     self.get_G_Tangents(Parameters)
+    return
 
 @register_method
 def get_G_Tangents(self, Parameters):
@@ -107,5 +108,5 @@ def get_G_uu_1(self, Parameters):
 
             self.dPdF_voigt[:,alpha,beta] = self.dPdF[:,i,I,a,A]
 
-    self.G_uu_1 = np.einsum('kiI,kij,kjJ,k->IJ', self.Bu, self.dPdF_voigt, self.Bu, self.weights*self.j)
+    self.G_uu_1 = np.einsum('kiI, kij, kjJ, k -> IJ', self.Bu, self.dPdF_voigt, self.Bu, self.weights*self.j)
     return
