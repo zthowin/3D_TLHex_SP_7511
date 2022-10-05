@@ -185,14 +185,14 @@ class Element:
         #----------------------------------
         # Compute shape function gradients.
         #----------------------------------
-        self.dN1_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN1_dxi, self.dN1_deta, self.dN1_dzeta]).T)
-        self.dN2_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN2_dxi, self.dN2_deta, self.dN2_dzeta]).T)
-        self.dN3_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN3_dxi, self.dN3_deta, self.dN3_dzeta]).T)
-        self.dN4_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN4_dxi, self.dN4_deta, self.dN4_dzeta]).T)
-        self.dN5_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN5_dxi, self.dN5_deta, self.dN5_dzeta]).T)
-        self.dN6_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN6_dxi, self.dN6_deta, self.dN6_dzeta]).T)
-        self.dN7_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN7_dxi, self.dN7_deta, self.dN7_dzeta]).T)
-        self.dN8_dx = np.einsum('...ij, ...j', self.Jeinv, np.array([self.dN8_dxi, self.dN8_deta, self.dN8_dzeta]).T)
+        self.dN1_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN1_dxi, self.dN1_deta, self.dN1_dzeta]).T)
+        self.dN2_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN2_dxi, self.dN2_deta, self.dN2_dzeta]).T)
+        self.dN3_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN3_dxi, self.dN3_deta, self.dN3_dzeta]).T)
+        self.dN4_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN4_dxi, self.dN4_deta, self.dN4_dzeta]).T)
+        self.dN5_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN5_dxi, self.dN5_deta, self.dN5_dzeta]).T)
+        self.dN6_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN6_dxi, self.dN6_deta, self.dN6_dzeta]).T)
+        self.dN7_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN7_dxi, self.dN7_deta, self.dN7_dzeta]).T)
+        self.dN8_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN8_dxi, self.dN8_deta, self.dN8_dzeta]).T)
         #--------------------------------------
         # Construct strain-displacement matrix.
         #--------------------------------------
@@ -232,17 +232,17 @@ class Element:
     
     def get_Jacobian(self):
         # Compute the element Jacobian.
-        self.dx_dxi   = np.einsum('ik, k', self.dN_dxi,   self.coordinates[:,0])
-        self.dx_deta  = np.einsum('ik, k', self.dN_deta,  self.coordinates[:,0])
-        self.dx_dzeta = np.einsum('ik, k', self.dN_dzeta, self.coordinates[:,0])
+        self.dx_dxi   = np.einsum('ki, i -> k', self.dN_dxi,   self.coordinates[:,0])
+        self.dx_deta  = np.einsum('ki, i -> k', self.dN_deta,  self.coordinates[:,0])
+        self.dx_dzeta = np.einsum('ki, i -> k', self.dN_dzeta, self.coordinates[:,0])
         
-        self.dy_dxi   = np.einsum('ik, k', self.dN_dxi,   self.coordinates[:,1])
-        self.dy_deta  = np.einsum('ik, k', self.dN_deta,  self.coordinates[:,1])
-        self.dy_dzeta = np.einsum('ik, k', self.dN_dzeta, self.coordinates[:,1])
+        self.dy_dxi   = np.einsum('ki, i -> k', self.dN_dxi,   self.coordinates[:,1])
+        self.dy_deta  = np.einsum('ki, i -> k', self.dN_deta,  self.coordinates[:,1])
+        self.dy_dzeta = np.einsum('ki, i -> k', self.dN_dzeta, self.coordinates[:,1])
         
-        self.dz_dxi   = np.einsum('ik, k', self.dN_dxi,   self.coordinates[:,2])
-        self.dz_deta  = np.einsum('ik, k', self.dN_deta,  self.coordinates[:,2])
-        self.dz_dzeta = np.einsum('ik, k', self.dN_dzeta, self.coordinates[:,2])
+        self.dz_dxi   = np.einsum('ki, i -> k', self.dN_dxi,   self.coordinates[:,2])
+        self.dz_deta  = np.einsum('ki, i -> k', self.dN_deta,  self.coordinates[:,2])
+        self.dz_dzeta = np.einsum('ki, i -> k', self.dN_dzeta, self.coordinates[:,2])
                 
         self.Je        = np.zeros((8,3,3),dtype=np.float64)
         self.Je[:,0,0] = self.dx_dxi
@@ -286,4 +286,76 @@ class Element:
     def set_u_global(self, a_D):
         # Initialize the global solid displacement (at element level).
         self.u_global = a_D
+        return
+
+    def evaluate_Shape_Functions_2D(self):
+        # Create a 2D planar element for traction boundary condition.
+        #---------
+        # Set N_a.
+        #---------
+        self.N5_2D = (1 - self.xi[4:8])*(1 - self.eta[4:8])/4
+        self.N6_2D = (1 + self.xi[4:8])*(1 - self.eta[4:8])/4
+        self.N7_2D = (1 + self.xi[4:8])*(1 + self.eta[4:8])/4
+        self.N8_2D = (1 - self.xi[4:8])*(1 + self.eta[4:8])/4
+        #-----------------------------
+        # Build shape function matrix.
+        #-----------------------------
+        self.Nu_2D = np.zeros((4, 3, 24), dtype=np.float64)
+        for i in range(3):
+            self.Nu_2D[:, i, 12 + i] = self.N5_2D
+            self.Nu_2D[:, i, 15 + i] = self.N6_2D
+            self.Nu_2D[:, i, 18 + i] = self.N7_2D
+            self.Nu_2D[:, i, 21 + i] = self.N8_2D
+        #----------------------------------
+        # Calculate derivatives w.r.t. \xi.
+        #----------------------------------
+        self.dN5_dxi_2D = -(1/4)*(1 - self.eta[4:8])
+        self.dN6_dxi_2D = -self.dN5_dxi_2D
+        self.dN7_dxi_2D = (1/4)*(1 + self.eta[4:8])
+        self.dN8_dxi_2D = -self.dN7_dxi_2D
+        
+        self.dN_dxi_2D      = np.zeros((4,4), dtype=np.float64)
+        self.dN_dxi_2D[:,0] = self.dN5_dxi_2D
+        self.dN_dxi_2D[:,1] = self.dN6_dxi_2D
+        self.dN_dxi_2D[:,2] = self.dN7_dxi_2D
+        self.dN_dxi_2D[:,3] = self.dN8_dxi_2D
+        #-----------------------------------
+        # Calculate derivatives w.r.t. \eta.
+        #-----------------------------------
+        self.dN5_deta_2D = -(1/4)*(1 - self.xi[4:8])
+        self.dN6_deta_2D = -(1/4)*(1 + self.xi[4:8])
+        self.dN7_deta_2D = -self.dN6_deta_2D
+        self.dN8_deta_2D = -self.dN5_deta_2D
+        
+        self.dN_deta_2D      = np.zeros((4,4), dtype=np.float64)
+        self.dN_deta_2D[:,0] = self.dN5_deta_2D
+        self.dN_deta_2D[:,1] = self.dN6_deta_2D
+        self.dN_deta_2D[:,2] = self.dN7_deta_2D
+        self.dN_deta_2D[:,3] = self.dN8_deta_2D
+        #------------------------
+        # Calculate the jacobian.
+        #------------------------
+        self.get_Jacobian_2D()
+
+        return
+
+    def get_Jacobian_2D(self):
+        # Compute the 2D element Jacobian.
+        self.dx_dxi_2D  = np.einsum('ki, i -> k', self.dN_dxi_2D,   self.coordinates[4:8,0])
+        self.dx_deta_2D = np.einsum('ki, i -> k', self.dN_deta_2D,  self.coordinates[4:8,0])
+        
+        self.dy_dxi_2D  = np.einsum('ki, i -> k', self.dN_dxi_2D,   self.coordinates[4:8,1])
+        self.dy_deta_2D = np.einsum('ki, i -> k', self.dN_deta_2D,  self.coordinates[4:8,1])
+                
+        self.Je_2D        = np.zeros((4,2,2),dtype=np.float64)
+        self.Je_2D[:,0,0] = self.dx_dxi_2D
+        self.Je_2D[:,0,1] = self.dx_deta_2D
+        self.Je_2D[:,1,0] = self.dy_dxi_2D
+        self.Je_2D[:,1,1] = self.dy_deta_2D
+        
+        self.j_2D = np.zeros(4, dtype=np.float64)
+
+        for i in range(4):
+            self.j_2D[i] = np.linalg.det(self.Je[i,:,:])
+        
         return
