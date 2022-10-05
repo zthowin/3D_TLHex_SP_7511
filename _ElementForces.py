@@ -32,9 +32,14 @@ def get_G_Forces(self, Parameters):
     self.G_int = np.zeros((24), dtype=np.float64)
     self.get_G1()
     self.get_G2(Parameters)
+    if np.abs(Parameters.traction) > 0:
+        self.G_ext = np.zeros((24), dtype=np.float64)
+        self.get_GEXT(Parameters)
 
     try:
         self.G_int += self.G_1 + self.G_2
+        if np.abs(Parameters.traction) > 0:
+            self.G_ext += self.G_EXT
     except FloatingPointError:
         print("ERROR. Encountered over/underflow error in G; occurred at element ID %i, t = %.2es and dt = %.2es." %(self.ID, Parameters.t, Parameters.dt))
         raise FloatingPointError
@@ -51,7 +56,17 @@ def get_G2(self, Parameters):
     # Compute G_2^INT.
     self.grav_body       = np.zeros((8,3))
     self.grav_body[:,2]  = -Parameters.grav
-    self.G_2 = np.einsum('kij, ki -> j', self.Nu, np.einsum('...i, ...i, ... -> ...i',\
-                                                            self.rho, self.grav_body, self.weights*self.j),\
-                                                            dtype=np.float64)
+    
+    self.G_2 = np.einsum('kij, ki, k -> j', self.Nu, self.rho*self.grav_body, self.weights*self.j, dtype=np.float64)
+    return
+
+@register_method
+def get_GEXT(self, Parameters):
+    # Compute G^EXT.
+    self.traction      = np.zeros((4,3))
+    self.traction[:,2] = -Parameters.tract
+    
+    self.evaluate_Shape_Functions_2D()
+
+    self.G_EXT = np.einsum('kij, ki, k -> j', self.Nu_2D, self.traction, self.weights[4:8]*self.j_2D, dtype=np.float64)
     return
