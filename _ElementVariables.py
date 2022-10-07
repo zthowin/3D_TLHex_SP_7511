@@ -29,11 +29,11 @@ def compute_variables(self, Parameters):
     self.get_F_inv()
     self.get_C()
     self.get_C_inv()
+    self.get_E()
     self.get_SPK(Parameters)
     self.get_FPK()
     self.get_b()
     self.get_v()
-    self.get_E()
     self.get_e()
     self.get_Hencky()
     self.get_Cauchy()
@@ -58,10 +58,10 @@ def get_F(self):
     shape = (8,3,3)
     self.identity = np.zeros(shape)
     np.einsum('ijj -> ij', self.identity)[:] = 1
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
     # Note that the dudX reshape is arbitrary; if we did not have 1D uniaxial
-    # strain, we would need to use Voigt notation (here, du_i/dX_j = du_j/dX_i).
-    #---------------------------------------------------------------------------
+    # strain, we would need to use Voigt notation (here, du_i/dX_j = du_j/dX_i = 0).
+    #-------------------------------------------------------------------------------
     self.F = (self.identity + self.dudX.reshape((8,3,3)))
     return
 
@@ -92,9 +92,15 @@ def get_C_inv(self):
 @register_method
 def get_SPK(self, Parameters):
     # Compute second Piola-Kirchoff stress tensor.
-    self.SPK = Parameters.mu*self.identity + np.einsum('..., ...IJ -> ...IJ',\
-                                                       Parameters.lambd*np.log(self.J) - Parameters.mu,\
-                                                       self.C_inv, dtype=np.float64)
+    if Parameters.constitutive_model == 'neo-Hookean':
+        self.SPK = Parameters.mu*self.identity + np.einsum('..., ...IJ -> ...IJ',\
+                                                           Parameters.lambd*np.log(self.J) - Parameters.mu,\
+                                                           self.C_inv, dtype=np.float64)
+    elif Parameters.constitutive_model == 'Saint Venant-Kirchhoff':
+        self.SPK = Parameters.lambd*np.einsum('...KK, ...IJ -> ...IJ', self.E, self.identity, dtype=np.float64)\
+                   + 2*Parameters.mu*self.E
+    else:
+        sys.exit("ERROR. Constitutive model not recognized, check inputs.")
     return
 
 @register_method
@@ -160,5 +166,5 @@ def get_rho(self):
 @register_method
 def get_rho_0(self, Parameters):
     # Compute mass density in reference configuration.
-    self.rho_0 = Parameters.rhoS_0*np.ones((8,3), dtype=np.float64)
+    self.rho_0 = Parameters.rho_0*np.ones((8,3), dtype=np.float64)
     return

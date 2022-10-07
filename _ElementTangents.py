@@ -42,11 +42,19 @@ def get_G_Tangents(self, Parameters):
 @register_method
 def get_G_uu_1(self, Parameters):
     # Compute G_uu_1.
-    self.dPdF = np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.SPK)\
-                + Parameters.lambd*np.einsum('...Aa, ...Ii -> ...iIaA', self.F_inv, self.F_inv)\
-                - np.einsum('..., ...iIaA -> ...iIaA', Parameters.lambd*np.log(self.J) - Parameters.mu,\
-                                             (np.einsum('...Ai, ...Ia -> ...iIaA', self.F_inv, self.F_inv)\
-                                              + np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.C_inv)))
+    if Parameters.constitutive_model == 'neo-Hookean':
+        self.dPdF = np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.SPK)\
+                    + Parameters.lambd*np.einsum('...Aa, ...Ii -> ...iIaA', self.F_inv, self.F_inv)\
+                    - np.einsum('..., ...iIaA -> ...iIaA', Parameters.lambd*np.log(self.J) - Parameters.mu,\
+                                                 (np.einsum('...Ai, ...Ia -> ...iIaA', self.F_inv, self.F_inv)\
+                                                  + np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.C_inv)))
+    elif Parameters.constitutive_model == 'Saint Venant-Kirchhoff':
+        self.dPdF = np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.SPK)\
+                    + Parameters.lambd*np.einsum('...iI, ...aA -> ...iIaA', self.F, self.F)\
+                    + Parameters.mu*(np.einsum('...iA, ...aI -> ...iIaA', self.F, self.F)\
+                                     + np.einsum('...iB, ...aB, ...AI -> ...iIaA', self.F, self.F, self.identity))
+    else:
+        sys.exit("ERROR. Constitutive model not recognized, check inputs.")
 
     self.dPdF_voigt = np.zeros((8,9,9), dtype=np.float64)
     for alpha in range(9):
