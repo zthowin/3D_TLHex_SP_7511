@@ -12,15 +12,18 @@ class Parameters:
         self.mu = 1923
 
         self.ns = 0.01
-        self.rhoS_0 = 1e3
+        self.rhoS_0 = 1000
         self.rho_0 = self.ns*self.rhoS_0
 
         self.grav = 9.81
         # self.grav = 0
 
-        self.numDOF   = 8
+        self.numDOF   = 4
         self.numEl    = 2
         self.numElDOF = 24
+
+        self.constitutive_model = 'Saint Venant-Kirchhoff'
+        # self.constitutive_model = 'neo-Hookean'
 
 params = Parameters()
 
@@ -54,26 +57,26 @@ LM[17,0] = 0
 LM[20,0] = 1
 LM[23,0] = 2
 # Uncomment for traction
-LM[14,1] = 7
-LM[17,1] = 4
-LM[20,1] = 5
-LM[23,1] = 6
+# LM[14,1] = 7
+# LM[17,1] = 4
+# LM[20,1] = 5
+# LM[23,1] = 6
 
-params.g_displ = -0.0
-params.traction = 1e4
+params.g_displ = -0.05
+params.traction = 0
 
 params.TStart = 0.0
 params.TStop  = 1.0
-params.dt     = 1/20
+params.dt     = 1/50
 params.nsteps = int(np.round((params.TStop - params.TStart)/params.dt))
 params.t      = params.TStart
 params.n      = 0
 
 params.t_ramp = 1.0
 
-params.tolr = 1e-8
-params.tola = 1e-6
-params.kmax = 5
+params.tolr = 1e-10
+params.tola = 1e-12
+params.kmax = 10
 
 D      = np.zeros((params.numDOF), dtype=np.float64)
 
@@ -101,12 +104,10 @@ while params.t < params.TStop:
     g_n[23,1] = gd_n
 
     if params.t < params.t_ramp:
-        # gd = params.g_displ*(params.t/params.t_ramp)
-        gd = 0
+        gd = params.g_displ*(params.t/params.t_ramp)
         params.tract = params.traction*(params.t/params.t_ramp)
     else:
-        # gd = params.g_displ
-        gd = 0
+        gd = params.g_displ
         params.tract = params.traction
 
     g[14,1] = gd
@@ -175,8 +176,6 @@ while params.t < params.TStop:
 
                 if I > -1:
                     R[I] += element.G_int[i]
-                    if element.ID == 1:
-                        R[I] -= element.G_ext[i]
 
                     for j in range(element.numDOF):
                         J = element.DOF[j]
@@ -186,17 +185,24 @@ while params.t < params.TStop:
 
         if k == 1:
             R0 = R
+        # print(dR)
         Rtol = np.linalg.norm(R)/np.linalg.norm(R0)
         normR = np.linalg.norm(R)
-
+        print("Rtol", Rtol)
+        print("normR", normR)
         if k > params.kmax:
             print(Rtol)
             print(normR)
             sys.exit("ERROR. Reached max number of iterations.")
 
 plt.figure(1)
-plt.plot(-stress_solve[2:,0,0,2,2,3],-stress_solve[2:,0,0,2,2,0]*1e-3, label=r'-$S_{33}$ vs. -$E_{33}$')
-plt.plot(-stress_solve[2:,0,0,2,2,4],-stress_solve[2:,0,0,2,2,2]*1e-3, label=r'-$s_{33}$ vs. -$e_{33}$')
-plt.plot(-stress_solve[2:,0,0,2,2,5],-stress_solve[2:,0,0,2,2,2]*1e-3, label=r'-$s_{33}$ vs. -$h_{33}$')
+plt.plot(-stress_solve[:,0,0,2,2,3],-stress_solve[:,0,0,2,2,0]*1e-3, 'k+-', label=r'-$S_{33}$ vs. -$E_{33}$', fillstyle='none')
+plt.plot(-stress_solve[:,0,0,2,2,4],-stress_solve[:,0,0,2,2,2]*1e-3, 'ko-', label=r'-$\sigma_{33}$ vs. -$e_{33}$', fillstyle='none')
+plt.plot(-stress_solve[:,0,0,2,2,5],-stress_solve[:,0,0,2,2,2]*1e-3, 'ks-', label=r'-$\sigma_{33}$ vs. -$h_{33}$', fillstyle='none')
 plt.legend()
+# plt.xlim([0, 0.2])
+# plt.ylim([0, 1.2])
+plt.grid()
+plt.ylabel('-Stress (kPa)')
+plt.xlabel('-Strain (m/m)')
 plt.show()
