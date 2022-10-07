@@ -95,9 +95,9 @@ class Element:
         # Set N_a.
         #---------
         self.N1 = (1 - self.xi)*(1 - self.eta)*(1 - self.zeta)/8
-        self.N2 = (1 + self.xi)*(1 + self.eta)*(1 - self.zeta)/8
+        self.N2 = (1 + self.xi)*(1 - self.eta)*(1 - self.zeta)/8
         self.N3 = (1 + self.xi)*(1 + self.eta)*(1 - self.zeta)/8
-        self.N4 = (1 - self.xi)*(1 - self.eta)*(1 - self.zeta)/8
+        self.N4 = (1 - self.xi)*(1 + self.eta)*(1 - self.zeta)/8
         self.N5 = (1 - self.xi)*(1 - self.eta)*(1 + self.zeta)/8
         self.N6 = (1 + self.xi)*(1 - self.eta)*(1 + self.zeta)/8
         self.N7 = (1 + self.xi)*(1 + self.eta)*(1 + self.zeta)/8
@@ -185,14 +185,14 @@ class Element:
         #----------------------------------
         # Compute shape function gradients.
         #----------------------------------
-        self.dN1_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN1_dxi, self.dN1_deta, self.dN1_dzeta]).T)
-        self.dN2_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN2_dxi, self.dN2_deta, self.dN2_dzeta]).T)
-        self.dN3_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN3_dxi, self.dN3_deta, self.dN3_dzeta]).T)
-        self.dN4_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN4_dxi, self.dN4_deta, self.dN4_dzeta]).T)
-        self.dN5_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN5_dxi, self.dN5_deta, self.dN5_dzeta]).T)
-        self.dN6_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN6_dxi, self.dN6_deta, self.dN6_dzeta]).T)
-        self.dN7_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN7_dxi, self.dN7_deta, self.dN7_dzeta]).T)
-        self.dN8_dx = np.einsum('...ij, ...j -> ...i', self.Jeinv, np.array([self.dN8_dxi, self.dN8_deta, self.dN8_dzeta]).T)
+        self.dN1_dx = np.einsum('...bI, ...b -> ...I', self.Jeinv, np.array([self.dN1_dxi, self.dN1_deta, self.dN1_dzeta]).T)
+        self.dN2_dx = np.einsum('...bI, ...b -> ...I', self.Jeinv, np.array([self.dN2_dxi, self.dN2_deta, self.dN2_dzeta]).T)
+        self.dN3_dx = np.einsum('...bI, ...b -> ...I', self.Jeinv, np.array([self.dN3_dxi, self.dN3_deta, self.dN3_dzeta]).T)
+        self.dN4_dx = np.einsum('...bI, ...b -> ...I', self.Jeinv, np.array([self.dN4_dxi, self.dN4_deta, self.dN4_dzeta]).T)
+        self.dN5_dx = np.einsum('...bI, ...b -> ...I', self.Jeinv, np.array([self.dN5_dxi, self.dN5_deta, self.dN5_dzeta]).T)
+        self.dN6_dx = np.einsum('...bI, ...b -> ...I', self.Jeinv, np.array([self.dN6_dxi, self.dN6_deta, self.dN6_dzeta]).T)
+        self.dN7_dx = np.einsum('...bI, ...b -> ...I', self.Jeinv, np.array([self.dN7_dxi, self.dN7_deta, self.dN7_dzeta]).T)
+        self.dN8_dx = np.einsum('...bI, ...b -> ...I', self.Jeinv, np.array([self.dN8_dxi, self.dN8_deta, self.dN8_dzeta]).T)
         #--------------------------------------
         # Construct strain-displacement matrix.
         #--------------------------------------
@@ -232,17 +232,17 @@ class Element:
     
     def get_Jacobian(self):
         # Compute the element Jacobian.
-        self.dx_dxi   = np.einsum('ki, i -> k', self.dN_dxi,   self.coordinates[:,0])
-        self.dx_deta  = np.einsum('ki, i -> k', self.dN_deta,  self.coordinates[:,0])
-        self.dx_dzeta = np.einsum('ki, i -> k', self.dN_dzeta, self.coordinates[:,0])
+        self.dx_dxi   = np.einsum('...i, i -> ...', self.dN_dxi,   self.coordinates[:,0])
+        self.dx_deta  = np.einsum('...i, i -> ...', self.dN_deta,  self.coordinates[:,0])
+        self.dx_dzeta = np.einsum('...i, i -> ...', self.dN_dzeta, self.coordinates[:,0])
         
-        self.dy_dxi   = np.einsum('ki, i -> k', self.dN_dxi,   self.coordinates[:,1])
-        self.dy_deta  = np.einsum('ki, i -> k', self.dN_deta,  self.coordinates[:,1])
-        self.dy_dzeta = np.einsum('ki, i -> k', self.dN_dzeta, self.coordinates[:,1])
+        self.dy_dxi   = np.einsum('...i, i -> ...', self.dN_dxi,   self.coordinates[:,1])
+        self.dy_deta  = np.einsum('...i, i -> ...', self.dN_deta,  self.coordinates[:,1])
+        self.dy_dzeta = np.einsum('...i, i -> ...', self.dN_dzeta, self.coordinates[:,1])
         
-        self.dz_dxi   = np.einsum('ki, i -> k', self.dN_dxi,   self.coordinates[:,2])
-        self.dz_deta  = np.einsum('ki, i -> k', self.dN_deta,  self.coordinates[:,2])
-        self.dz_dzeta = np.einsum('ki, i -> k', self.dN_dzeta, self.coordinates[:,2])
+        self.dz_dxi   = np.einsum('...i, i -> ...', self.dN_dxi,   self.coordinates[:,2])
+        self.dz_deta  = np.einsum('...i, i -> ...', self.dN_deta,  self.coordinates[:,2])
+        self.dz_dzeta = np.einsum('...i, i -> ...', self.dN_dzeta, self.coordinates[:,2])
                 
         self.Je        = np.zeros((8,3,3),dtype=np.float64)
         self.Je[:,0,0] = self.dx_dxi
@@ -356,6 +356,6 @@ class Element:
         self.j_2D = np.zeros(4, dtype=np.float64)
 
         for i in range(4):
-            self.j_2D[i] = np.linalg.det(self.Je[i,:,:])
+            self.j_2D[i] = np.linalg.det(self.Je_2D[i,:,:])
         
         return
