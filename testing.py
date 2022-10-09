@@ -27,7 +27,7 @@ class Parameters:
         #-----------------------------------
         # Set boundary condition parameters.
         #-----------------------------------
-        self.g_d          = 0.0
+        self.g_displ      = -0.05
         self.tractionLoad = 0.0
         self.theta        = np.pi/2
         self.g_da         = 0.0
@@ -53,15 +53,16 @@ class Parameters:
         #------------------------
         # Set element properties.
         #------------------------
-        self.numGauss = 8
-        self.numDim   = 3
-        self.numElDOF = 24
+        self.GaussOrder = 2
+        self.numGauss   = 8
+        self.numDim     = 3
+        self.numElDOF   = 24
 
 params = Parameters()
 
-params.displacementProblem = False
+params.displacementProblem = True
 params.tractionProblem     = False
-params.rotationProblem     = True
+params.rotationProblem     = False
 
 if params.displacementProblem or params.tractionProblem:
     #---------------------------------------
@@ -179,47 +180,70 @@ while params.t < params.TStop:
 
     params.t += params.dt
     params.n += 1
-    print("t = %.2f seconds" %params.t)
-    print(params.n)
+    print("n = %i, t = %.2f seconds" %(params.n, params.t))
 
-    if params.t < params.t_ramp:
-        gd = params.g_displ*(params.t/params.t_ramp)
-        params.tract = params.traction*(params.t/params.t_ramp)
-    else:
-        gd = params.g_displ
-        params.tract = params.traction
+    if params.displacementProblem:
+        #-----------------------------------
+        # Update the increment displacement.
+        #-----------------------------------
+        g_d_np1 = params.g_displ*(params.t/params.t_ramp)
+        #-------------------
+        # Update global BCs.
+        #-------------------
+        g[14,1] = g_d_np1
+        g[17,1] = g_d_np1
+        g[20,1] = g_d_np1
+        g[23,1] = g_d_np1
 
-    # g[14,1] = gd
-    # g[17,1] = gd
-    # g[20,1] = gd
-    # g[23,1] = gd
-    theta = np.pi/2
-    da    = d_a*params.t
-    db    = d_b*params.t
+    elif params.tractionProblem:
+        #-------------------------------
+        # Update the increment traction.
+        #-------------------------------
+        params.tract = params.tractionLoad*(params.t/params.t_ramp)
 
-    # x_rot1 = -np.sin(theta)*np.tan(theta/2) + da*np.cos(theta)
-    # y_rot1 = np.sin(theta) + da*np.sin(theta)
-    # z_rot1
-    g[3] = -np.sin(theta)*np.tan(theta/2) + da*np.cos(theta)
-    g[4] = np.sin(theta) + da*np.sin(theta)
-    g[6] = -(np.sqrt(2)*np.sin(theta)/np.cos(theta/2))*np.cos(np.pi/4 - theta/2) + da*np.cos(theta) - db*np.sin(theta)
-    g[7] = (np.sqrt(2)*np.sin(theta)/np.cos(theta/2))*np.sin(np.pi/4 - theta/2)  + da*np.sin(theta) + db*np.cos(theta)
-    g[9] = -np.sin(theta) - db*np.sin(theta)
-    g[10] = -np.sin(theta)*np.tan(theta/2) + db*np.cos(theta)
-    g[15] = -np.sin(theta)*np.tan(theta/2) + da*np.cos(theta)
-    g[16] = np.sin(theta) + da*np.sin(theta)
-    g[18] = (-np.sqrt(2)*np.sin(theta)/np.cos(theta/2))*np.cos(np.pi/4 - theta/2) + da*np.cos(theta) - db*np.sin(theta)
-    g[19] = (np.sqrt(2)*np.sin(theta)/np.cos(theta/2))*np.sin(np.pi/4 - theta/2)  + da*np.sin(theta) + db*np.cos(theta)
-    g[21] = -np.sin(theta) - db*np.sin(theta)
-    g[22] = -np.sin(theta)*np.tan(theta/2) + db*np.cos(theta)
+    elif params.rotationProblem:
+        #------------------------------
+        # Update the increment rotation.
+        #-------------------------------
+        theta_np1 = params.t*params.theta
+        g_da_np1  = params.t*params.g_da
+        g_db_np1  = params.t*params.g_db
 
-    Rtol = 1
+        x_rot1 = -np.sin(theta_np1)*np.tan(theta_np1/2) + g_da_np1*np.cos(theta_np1)
+        y_rot1 = np.sin(theta_np1) + g_da_np1*np.sin(theta_np1)
+        x_rot2 = -(np.sqrt(2)*np.sin(theta_np1)/np.cos(theta_np1/2))*np.cos(np.pi/4 - theta_np1/2) + g_da_np1*np.cos(theta_np1) - g_db_np1*np.sin(theta_np1)
+        y_rot2 = (np.sqrt(2)*np.sin(theta_np1)/np.cos(theta_np1/2))*np.sin(np.pi/4 - theta_np1/2)  + g_da_np1*np.sin(theta_np1) + g_db_np1*np.cos(theta_np1)
+        x_rot3 = -np.sin(theta_np1) - g_db_np1*np.sin(theta_np1)
+        y_rot3 = -np.sin(theta_np1)*np.tan(theta_np1/2) + g_db_np1*np.cos(theta_np1)
+        #-------------------
+        # Update global BCs.
+        #-------------------
+        g[3]  = x_rot1
+        g[4]  = y_rot1
+        g[6]  = x_rot2
+        g[7]  = y_rot2
+        g[9]  = x_rot3
+        g[10] = y_rot3
+        g[15] = x_rot1
+        g[16] = y_rot1
+        g[18] = x_rot2
+        g[19] = y_rot2
+        g[21] = x_rot3
+        g[22] = y_rot3
+
+    #----------------------
+    # Reset N-R parameters.
+    #----------------------
+    Rtol  = 1
     normR = 1
-    k = 0
-
+    k     = 0
+    #----------------------
+    # Begin N-R iterations.
+    #----------------------
     while Rtol > params.tolr and normR > params.tola:
 
         k += 1
+
         if params.n == 1 and k == 1:
             del_d = np.zeros((params.numDOF), dtype=params.float_dtype)
         else:
@@ -227,14 +251,14 @@ while params.t < params.TStop:
 
         D += del_d
 
-        R  = np.zeros((params.numDOF), dtype=params.float_dtype)
+        R  = np.zeros((params.numDOF),                dtype=params.float_dtype)
         dR = np.zeros((params.numDOF, params.numDOF), dtype=params.float_dtype)
 
         for element_ID in range(params.numEl):
             #------------------------
             # Initialize the element.
             #------------------------
-            element = classElement.Element(a_GaussOrder=2, a_ID=element_ID)
+            element = classElement.Element(a_GaussOrder=params.GaussOrder, a_ID=element_ID)
             element.set_Gauss_Points(params)
             element.set_Gauss_Weights(params)
             element.set_Coordinates(coordinates[element.ID,:,:])
@@ -283,30 +307,43 @@ while params.t < params.TStop:
 
         if k == 1:
             R0 = R
-        # print(dR)
-        # input()
+
         Rtol  = np.linalg.norm(R)/np.linalg.norm(R0)
         normR = np.linalg.norm(R)
-        print("Rtol", Rtol)
-        # print("normR", normR)
+
         if k > params.kmax:
             print(Rtol)
             print(normR)
             sys.exit("ERROR. Reached max number of iterations.")
 
 plt.figure(1)
-# plt.plot(-stress_solve[:,0,0,2,2,3],-stress_solve[:,0,0,2,2,0]*1e-3, 'k+-', label=r'-$S_{33}$ vs. -$E_{33}$', fillstyle='none')
-# plt.plot(-stress_solve[:,0,0,2,2,4],-stress_solve[:,0,0,2,2,2]*1e-3, 'ko-', label=r'-$\sigma_{33}$ vs. -$e_{33}$', fillstyle='none')
-# plt.plot(-stress_solve[:,0,0,2,2,5],-stress_solve[:,0,0,2,2,2]*1e-3, 'ks-', label=r'-$\sigma_{33}$ vs. -$h_{33}$', fillstyle='none')
-stress_solve[1:,0,0,:,:,5][~np.isfinite(stress_solve[1:,0,0,:,:,5])] = 0
-# print(stress_solve[1:,0,0,:,:,5])
-minStress = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,2])[0], axis=1)
-minStrain = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,5])[0], axis=1)
-plt.plot(minStrain[0:], -minStress[0:,]*1e-3)
+if params.displacementProblem or params.tractionProblem:
+    #-----------
+    # Make plot.
+    #-----------
+    plt.plot(-stress_solve[:,0,0,2,2,3],-stress_solve[:,0,0,2,2,0]*1e-3, 'k+-', label=r'-$S_{33}$ vs. -$E_{33}$', fillstyle='none')
+    plt.plot(-stress_solve[:,0,0,2,2,4],-stress_solve[:,0,0,2,2,2]*1e-3, 'ko-', label=r'-$\sigma_{33}$ vs. -$e_{33}$', fillstyle='none')
+    plt.plot(-stress_solve[:,0,0,2,2,5],-stress_solve[:,0,0,2,2,2]*1e-3, 'ks-', label=r'-$\sigma_{33}$ vs. -$h_{33}$', fillstyle='none')
+    plt.ylabel('-Stress (kPa)')
+    plt.xlabel('-Strain (m/m)')
+
+elif params.rotationProblem:
+    #------------------------
+    # Get rid of NaN and inf.
+    #------------------------
+    stress_solve[1:,0,0,:,:,5][~np.isfinite(stress_solve[1:,0,0,:,:,5])] = 0
+    #-------------------------------
+    # Calculate minimum eigenvalues.
+    #-------------------------------
+    minStress = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,2])[0], axis=1)
+    minStrain = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,5])[0], axis=1)
+    #-----------
+    # Make plot.
+    #-----------
+    plt.plot(minStrain[0:], -minStress[0:,]*1e-3, label=r'minStress vs. minStrain')
+    plt.ylabel('-Stress (kPa)')
+    plt.xlabel('Strain (m/m)')
+
 plt.legend()
-# plt.xlim([0, 0.2])
-# plt.ylim([0, 1.2])
 plt.grid()
-plt.ylabel('-Stress (kPa)')
-plt.xlabel('-Strain (m/m)')
 plt.show()
