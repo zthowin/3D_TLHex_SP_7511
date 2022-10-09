@@ -90,9 +90,9 @@ def get_G2(self, Parameters):
 @register_method
 def get_GEXT(self, Parameters):
     # Compute G^EXT (for topmost element only).
-    if self.ID == (Parameters.numEl - 1) and Parameters.tract > 0:
+    if self.ID == (Parameters.numEl - 1) and Parameters.tractionProblem:
         self.traction      = np.zeros((4,3), dtype=Parameters.float_dtype)
-        self.traction[:,2] = -Parameters.tract
+        self.traction[:,2] = -Parameters.traction
     
         self.evaluate_Shape_Functions_2D(Parameters)
         self.G_EXT = np.einsum('kij, ki, k -> j', self.Nu_2D, self.traction, self.weights[4:8]*self.j_2D, dtype=Parameters.float_dtype)
