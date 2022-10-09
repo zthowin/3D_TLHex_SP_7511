@@ -29,8 +29,8 @@ def compute_forces(self, Parameters):
 @register_method
 def get_G_Forces(self, Parameters):
     # Assemble solid internal force vectors.
-    self.G_int = np.zeros((24), dtype=np.float64)
-    self.get_G1()
+    self.G_int = np.zeros((24), dtype=Parameters.float_dtype)
+    self.get_G1(Parameters)
     self.get_G2(Parameters)      
     self.get_GEXT(Parameters)
 
@@ -42,33 +42,60 @@ def get_G_Forces(self, Parameters):
     return
 
 @register_method
-def get_G1(self):
+def get_G1(self, Parameters):
     # Compute G_1^INT.
-    #---------------------------------------------------------------------------
-    # Note that the reshape is arbitrary; if we did not have 1D uniaxial strain,
-    # we would need to use Voigt notation (here, du_i/dX_j = du_j/dX_i = 0).
-    #---------------------------------------------------------------------------
-    self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.FPK.reshape((8,9)), self.weights*self.j, dtype=np.float64)
+    self.FPK_voigt = np.zeros((8,9), dtype=Parameters.float_dtype)
+    for i in range(9):
+        if i == 0:
+            alpha = 0
+            beta  = 0
+        elif i == 1:
+            alpha = 0
+            beta  = 1
+        elif i == 2:
+            alpha = 0
+            beta  = 2
+        elif i == 3:
+            alpha = 1
+            beta  = 0
+        elif i == 4:
+            alpha = 1
+            beta  = 1
+        elif i == 5:
+            alpha = 1
+            beta  = 2
+        elif i == 6:
+            alpha = 2
+            beta  = 0
+        elif i == 7:
+            alpha = 2
+            beta  = 1
+        elif i == 8:
+            alpha = 2
+            beta  = 2
+        self.FPK_voigt[:,i] = self.FPK[:,alpha,beta]
+
+    self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.FPK_voigt, self.weights*self.j, dtype=Parameters.float_dtype)
     return
 
 @register_method
 def get_G2(self, Parameters):
     # Compute G_2^INT.
-    self.grav_body       = np.zeros((8,3))
+    self.grav_body       = np.zeros((8,3), dtype=Parameters.float_dtype)
     self.grav_body[:,2]  = -Parameters.grav
     
-    self.G_2 = np.einsum('kij, ki, k -> j', -self.Nu, self.rho_0*self.grav_body, self.weights*self.j, dtype=np.float64)
+    self.G_2 = np.einsum('kij, ki, k -> j', -self.Nu, self.rho_0*self.grav_body, self.weights*self.j, dtype=Parameters.float_dtype)
     return
 
 @register_method
 def get_GEXT(self, Parameters):
-    # Compute G^EXT.
-    if self.ID == 1 and Parameters.tract > 0:
-        self.traction      = np.zeros((4,3))
+    # Compute G^EXT (for topmost element only).
+    if self.ID == (Parameters.numEl - 1) and Parameters.tract > 0:
+        self.traction      = np.zeros((4,3), dtype=Parameters.float_dtype)
         self.traction[:,2] = -Parameters.tract
     
-        self.evaluate_Shape_Functions_2D()
-        self.G_EXT = np.einsum('kij, ki, k -> j', self.Nu_2D, self.traction, self.weights[4:8]*self.j_2D, dtype=np.float64)
+        self.evaluate_Shape_Functions_2D(Parameters)
+        self.G_EXT = np.einsum('kij, ki, k -> j', self.Nu_2D, self.traction, self.weights[4:8]*self.j_2D, dtype=Parameters.float_dtype)
     else:
-        self.G_EXT = np.zeros((24), dtype=np.float64)
+        self.G_EXT = np.zeros((24), dtype=Parameters.float_dtype)
     return
