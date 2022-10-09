@@ -43,20 +43,20 @@ def get_G_Tangents(self, Parameters):
 def get_G_uu_1(self, Parameters):
     # Compute G_uu_1.
     if Parameters.constitutive_model == 'neo-Hookean':
-        self.dPdF = np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.SPK)\
-                    + Parameters.lambd*np.einsum('...Aa, ...Ii -> ...iIaA', self.F_inv, self.F_inv)\
+        self.dPdF = np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.SPK, dtype=Parameters.float_dtype)\
+                    + Parameters.lambd*np.einsum('...Aa, ...Ii -> ...iIaA', self.F_inv, self.F_inv, dtype=Parameters.float_dtype)\
                     - np.einsum('..., ...iIaA -> ...iIaA', Parameters.lambd*np.log(self.J) - Parameters.mu,\
-                                                 (np.einsum('...Ai, ...Ia -> ...iIaA', self.F_inv, self.F_inv)\
-                                                  + np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.C_inv)))
+                                                 (np.einsum('...Ai, ...Ia -> ...iIaA', self.F_inv, self.F_inv, dtype=Parameters.float_dtype)\
+                                                  + np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.C_inv, dtype=Parameters.float_dtype)))
     elif Parameters.constitutive_model == 'Saint Venant-Kirchhoff':
-        self.dPdF = np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.SPK)\
-                    + Parameters.lambd*np.einsum('...iI, ...aA -> ...iIaA', self.F, self.F)\
-                    + Parameters.mu*(np.einsum('...iA, ...aI -> ...iIaA', self.F, self.F)\
-                                     + np.einsum('...iB, ...aB, ...AI -> ...iIaA', self.F, self.F, self.identity))
+        self.dPdF = np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.SPK, dtype=Parameters.float_dtype)\
+                    + Parameters.lambd*np.einsum('...iI, ...aA -> ...iIaA', self.F, self.F, dtype=Parameters.float_dtype)\
+                    + Parameters.mu*(np.einsum('...iA, ...aI -> ...iIaA', self.F, self.F, dtype=Parameters.float_dtype)\
+                                     + np.einsum('...iB, ...aB, ...IA -> ...iIaA', self.F, self.F, self.identity, dtype=Parameters.float_dtype))
     else:
         sys.exit("ERROR. Constitutive model not recognized, check inputs.")
 
-    self.dPdF_voigt = np.zeros((8,9,9), dtype=np.float64)
+    self.dPdF_voigt = np.zeros((8,9,9), dtype=Parameters.float_dtype)
     for alpha in range(9):
         if alpha == 0:
             i = 0
@@ -116,5 +116,5 @@ def get_G_uu_1(self, Parameters):
 
             self.dPdF_voigt[:,alpha,beta] = self.dPdF[:,i,I,a,A]
 
-    self.G_uu_1 = np.einsum('kiI, kij, kjJ, k -> IJ', self.Bu, self.dPdF_voigt, self.Bu, self.weights*self.j)
+    self.G_uu_1 = np.einsum('kaI, kab, kbJ, k -> IJ', self.Bu, self.dPdF_voigt, self.Bu, self.weights*self.j, dtype=Parameters.float_dtype)
     return
