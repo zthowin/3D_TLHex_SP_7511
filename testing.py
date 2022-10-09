@@ -28,10 +28,10 @@ class Parameters:
         # Set boundary condition parameters.
         #-----------------------------------
         self.g_displ      = -0.05
-        self.tractionLoad = 0.0
+        self.tractionLoad = 1e4
         self.theta        = np.pi/2
-        self.g_da         = 0.0
-        self.g_db         = 0.0
+        self.g_da         = -0.4
+        self.g_db         = -0.2
         self.t_ramp       = 1.0
         #---------------------------------
         # Set time integration parameters.
@@ -47,8 +47,8 @@ class Parameters:
         # - Note: loose tolerances gives
         #         better performance.
         #-------------------------------
-        self.tolr = 1e-6
-        self.tola = 1e-8
+        self.tolr = 1e-4
+        self.tola = 1e-4
         self.kmax = 20
         #------------------------
         # Set element properties.
@@ -60,9 +60,9 @@ class Parameters:
 
 params = Parameters()
 
-params.displacementProblem = True
+params.displacementProblem = False
 params.tractionProblem     = False
-params.rotationProblem     = False
+params.rotationProblem     = True
 
 if params.displacementProblem or params.tractionProblem:
     #---------------------------------------
@@ -176,7 +176,7 @@ stress_solve = np.zeros((params.numSteps+1,params.numEl,params.numGauss,params.n
 # Begin simulation.
 #------------------
 print("Solving...")
-while params.t < params.TStop:
+for n in range(params.numSteps):
 
     params.t += params.dt
     params.n += 1
@@ -199,7 +199,7 @@ while params.t < params.TStop:
         #-------------------------------
         # Update the increment traction.
         #-------------------------------
-        params.tract = params.tractionLoad*(params.t/params.t_ramp)
+        params.traction = params.tractionLoad*(params.t/params.t_ramp)
 
     elif params.rotationProblem:
         #------------------------------
@@ -335,14 +335,14 @@ elif params.rotationProblem:
     #-------------------------------
     # Calculate minimum eigenvalues.
     #-------------------------------
-    minStress = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,2])[0], axis=1)
-    minStrain = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,5])[0], axis=1)
+    minStress = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,0])[0], axis=1)
+    minStrain = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,4])[0], axis=1)
     #-----------
     # Make plot.
     #-----------
-    plt.plot(minStrain[0:], -minStress[0:,]*1e-3, label=r'minStress vs. minStrain')
+    plt.plot(-minStrain[0:], -minStress[0:,]*1e-3, label=r'minStress vs. minStrain')
     plt.ylabel('-Stress (kPa)')
-    plt.xlabel('Strain (m/m)')
+    plt.xlabel('-Strain (m/m)')
 
 plt.legend()
 plt.grid()
