@@ -116,5 +116,5 @@ def get_G_uu_1(self, Parameters):
 
             self.dPdF_voigt[:,alpha,beta] = self.dPdF[:,i,I,a,A]
 
-    self.G_uu_1 = np.einsum('kaI, kab, kbJ, k -> IJ', self.Bu, self.dPdF_voigt, self.Bu, self.weights*self.j, dtype=Parameters.float_dtype)
+    self.G_uu_1 = np.einsum('kiI, kij, kjJ, k -> IJ', self.Bu, self.dPdF_voigt, self.Bu, self.weights*self.j, dtype=Parameters.float_dtype)
     return

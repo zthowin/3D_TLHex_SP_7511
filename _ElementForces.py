@@ -45,35 +45,35 @@ def get_G_Forces(self, Parameters):
 def get_G1(self, Parameters):
     # Compute G_1^INT.
     self.FPK_voigt = np.zeros((8,9), dtype=Parameters.float_dtype)
-    for i in range(9):
-        if i == 0:
-            alpha = 0
-            beta  = 0
-        elif i == 1:
-            alpha = 0
-            beta  = 1
-        elif i == 2:
-            alpha = 0
-            beta  = 2
-        elif i == 3:
-            alpha = 1
-            beta  = 0
-        elif i == 4:
-            alpha = 1
-            beta  = 1
-        elif i == 5:
-            alpha = 1
-            beta  = 2
-        elif i == 6:
-            alpha = 2
-            beta  = 0
-        elif i == 7:
-            alpha = 2
-            beta  = 1
-        elif i == 8:
-            alpha = 2
-            beta  = 2
-        self.FPK_voigt[:,i] = self.FPK[:,alpha,beta]
+    for alpha in range(9):
+        if alpha == 0:
+            i = 0
+            I = 0
+        elif alpha == 1:
+            i = 0
+            I = 1
+        elif alpha == 2:
+            i = 0
+            I = 2
+        elif alpha == 3:
+            i = 1
+            I = 0
+        elif alpha == 4:
+            i = 1
+            I = 1
+        elif alpha == 5:
+            i = 1
+            I = 2
+        elif alpha == 6:
+            i = 2
+            I = 0
+        elif alpha == 7:
+            i = 2
+            I = 1
+        elif alpha == 8:
+            i = 2
+            I = 2
+        self.FPK_voigt[:,alpha] = self.FPK[:,i,I]
 
     self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.FPK_voigt, self.weights*self.j, dtype=Parameters.float_dtype)
     return
