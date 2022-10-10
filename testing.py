@@ -38,7 +38,7 @@ class Parameters:
         #---------------------------------
         self.TStart   = 0.0
         self.TStop    = 1.0
-        self.numSteps = 20 # set to low value for stability reasons
+        self.numSteps = 10 # set to low value for stability reasons
         self.dt       = (self.TStop - self.TStart)/self.numSteps
         self.t        = self.TStart
         self.n        = 0
@@ -49,7 +49,7 @@ class Parameters:
         #-------------------------------
         self.tolr = 1e-4
         self.tola = 1e-4
-        self.kmax = 20
+        self.kmax = 5
         #------------------------
         # Set element properties.
         #------------------------
@@ -231,9 +231,9 @@ for n in range(params.numSteps):
         g[21] = x_rot3
         g[22] = y_rot3
 
-    #----------------------
-    # Reset N-R parameters.
-    #----------------------
+    #---------------------
+    # Reset N-R variables.
+    #---------------------
     Rtol  = 1
     normR = 1
     k     = 0
@@ -311,9 +311,11 @@ for n in range(params.numSteps):
         Rtol  = np.linalg.norm(R)/np.linalg.norm(R0)
         normR = np.linalg.norm(R)
 
+        print(Rtol, normR)
+
         if k > params.kmax:
-            print(Rtol)
-            print(normR)
+            # print(Rtol)
+            # print(normR)
             sys.exit("ERROR. Reached max number of iterations.")
 
 plt.figure(1)
@@ -331,16 +333,17 @@ elif params.rotationProblem:
     #------------------------
     # Get rid of NaN and inf.
     #------------------------
-    stress_solve[1:,0,0,:,:,5][~np.isfinite(stress_solve[1:,0,0,:,:,5])] = 0
+    stress_solve[1:,:,:,:,:,5][~np.isfinite(stress_solve[1:,:,:,:,:,5])] = 0
     #-------------------------------
     # Calculate minimum eigenvalues.
     #-------------------------------
-    minStress = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,0])[0], axis=1)
-    minStrain = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,4])[0], axis=1)
+    minStress = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,2])[0], axis=1)
+    minStrain = np.min(np.linalg.eig(stress_solve[1:,0,0,:,:,5])[0], axis=1)
+    # print(minStress, minStrain)
     #-----------
     # Make plot.
     #-----------
-    plt.plot(-minStrain[0:], -minStress[0:,]*1e-3, label=r'minStress vs. minStrain')
+    plt.plot(-minStrain,-minStress*1e-3, 'k-', label=r'minStress vs. minStrain')
     plt.ylabel('-Stress (kPa)')
     plt.xlabel('-Strain (m/m)')
 
