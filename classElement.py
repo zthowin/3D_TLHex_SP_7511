@@ -344,8 +344,6 @@ class Element:
 
     def set_Global_Solutions(self, a_D):
         # Set the local solution variables at the current time step.
-        # print(self.DOF.shape)
-        # print(a_D)
         self.set_u_global(a_D[self.DOF[0:self.numDOF]])
         return
 
