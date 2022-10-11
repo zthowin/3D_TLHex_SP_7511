@@ -23,7 +23,7 @@ except ImportError:
     sys.exit("MODULE WARNING. classElement not found, check present working directory.")
 
 
-def main(Parameters):
+def main(Parameters, printTol=False):
     #---------------------------------------
     # 2 element problem, 1D uniaxial strain.
     #---------------------------------------
@@ -205,6 +205,11 @@ def main(Parameters):
 
             Rtol  = np.linalg.norm(R)/np.linalg.norm(R0)
             normR = np.linalg.norm(R)
+
+            if printTol:
+                print("k = ", k)
+                print("Relative tolerance = ", Rtol)
+                print("Norm of tolerance = ", normR)
 
             if k > Parameters.kmax:
                 print("Relative tolerance = ", Rtol)
