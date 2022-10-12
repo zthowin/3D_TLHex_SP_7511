@@ -63,11 +63,10 @@ def main(Parameters, printTol=False):
     #   - For the displacement problem, only the 
     #     middle 4 nodes are unconstrained in the 
     #     z-direction. For two elements, this 
-    #     amounts to 8 local DOFs.
+    #     amounts to 4 DOFs.
     #   - For the traction problem, the top 4 nodes
     #     are unconstrained in the z-direction. For
-    #     two elements, this amounts to 12 local
-    #     DOFs.
+    #     two elements, this amounts to 8 DOFs.
     #----------------------------------------------
     LM[2,1]  = 3
     LM[5,1]  = 0
