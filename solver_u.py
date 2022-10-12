@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 11, 2022
+# Last Edit:    October 12, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -85,7 +85,7 @@ def main(Parameters, printTol=False):
     #----------------------------
     # Set the initial conditions.
     #----------------------------
-    D = np.zeros((Parameters.numDOF), dtype=Parameters.float_dtype)
+    D = np.zeros((Parameters.numDOF),                     dtype=Parameters.float_dtype)
     g = np.zeros((Parameters.numElDOF, Parameters.numEl), dtype=Parameters.float_dtype)
     #-----------------------------
     # Set storage arrays.
@@ -145,7 +145,7 @@ def main(Parameters, printTol=False):
 
             D += del_d
 
-            R  = np.zeros((Parameters.numDOF),                dtype=Parameters.float_dtype)
+            R  = np.zeros((Parameters.numDOF),                    dtype=Parameters.float_dtype)
             dR = np.zeros((Parameters.numDOF, Parameters.numDOF), dtype=Parameters.float_dtype)
 
             for element_ID in range(Parameters.numEl):
@@ -215,10 +215,15 @@ def main(Parameters, printTol=False):
                 print("Norm of tolerance = ", normR)
                 sys.exit("ERROR. Reached max number of iterations.")
 
+        #-----------------------------------------
+        # Save the converged displacement results.
+        #-----------------------------------------
+        # D_solve[Parameters.n,:] = D[:] # commented out since we don't plot it
+
+    #-----------------------------------
+    # Make plot for stress-strain curve.
+    #-----------------------------------
     plt.figure(1)
-    #-----------
-    # Make plot.
-    #-----------
     plt.plot(-stress_solve[:,0,0,2,2,3],-stress_solve[:,0,0,2,2,0]*1e-3, 'k+-', label=r'-$S_{33}$ vs. -$E_{33}$', fillstyle='none')
     plt.plot(-stress_solve[:,0,0,2,2,4],-stress_solve[:,0,0,2,2,2]*1e-3, 'ko-', label=r'-$\sigma_{33}$ vs. -$e_{33}$', fillstyle='none')
     plt.plot(-stress_solve[:,0,0,2,2,5],-stress_solve[:,0,0,2,2,2]*1e-3, 'ks-', label=r'-$\sigma_{33}$ vs. -$h_{33}$', fillstyle='none')
