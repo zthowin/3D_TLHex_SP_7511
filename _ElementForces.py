@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 6, 2022
+# Last Edit:    October 12, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -29,7 +29,7 @@ def compute_forces(self, Parameters):
 @register_method
 def get_G_Forces(self, Parameters):
     # Assemble solid internal force vectors.
-    self.G_int = np.zeros((24), dtype=Parameters.float_dtype)
+    self.G_int = np.zeros((Parameters.numElDOF), dtype=Parameters.float_dtype)
     self.get_G1(Parameters)
     self.get_G2(Parameters)      
     self.get_GEXT(Parameters)
@@ -44,8 +44,8 @@ def get_G_Forces(self, Parameters):
 @register_method
 def get_G1(self, Parameters):
     # Compute G_1^INT.
-    self.FPK_voigt = np.zeros((8,9), dtype=Parameters.float_dtype)
-    for alpha in range(9):
+    self.FPK_voigt = np.zeros((Parameters.numGauss,Parameters.numDim**2), dtype=Parameters.float_dtype)
+    for alpha in range(Parameters.numDim**2):
         if alpha == 0:
             i = 0
             I = 0
@@ -81,7 +81,7 @@ def get_G1(self, Parameters):
 @register_method
 def get_G2(self, Parameters):
     # Compute G_2^INT.
-    self.grav_body       = np.zeros((8,3), dtype=Parameters.float_dtype)
+    self.grav_body       = np.zeros((Parameters.numGauss,Parameters.numDim), dtype=Parameters.float_dtype)
     self.grav_body[:,2]  = -Parameters.grav
     
     self.G_2 = np.einsum('kij, ki, k -> j', -self.Nu, self.rho_0*self.grav_body, self.weights*self.j, dtype=Parameters.float_dtype)
@@ -90,6 +90,7 @@ def get_G2(self, Parameters):
 @register_method
 def get_GEXT(self, Parameters):
     # Compute G^EXT (for topmost element only).
+    # Coded for Q8 Hex.
     if self.ID == (Parameters.numEl - 1) and Parameters.tractionProblem:
         self.traction      = np.zeros((4,3), dtype=Parameters.float_dtype)
         self.traction[:,2] = -Parameters.traction
@@ -97,5 +98,5 @@ def get_GEXT(self, Parameters):
         self.evaluate_Shape_Functions_2D(Parameters)
         self.G_EXT = np.einsum('kij, ki, k -> j', self.Nu_2D, self.traction, self.weights[4:8]*self.j_2D, dtype=Parameters.float_dtype)
     else:
-        self.G_EXT = np.zeros((24), dtype=Parameters.float_dtype)
+        self.G_EXT = np.zeros((Parameters.numElDOF), dtype=Parameters.float_dtype)
     return

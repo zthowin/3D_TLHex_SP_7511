@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 4, 2022
+# Last Edit:    October 12, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -29,7 +29,7 @@ def compute_tangents(self, Parameters):
 @register_method
 def get_G_Tangents(self, Parameters):
     # Assemble solid consistent tangents.
-    self.G_Mtx = np.zeros((24,24))
+    self.G_Mtx = np.zeros((Parameters.numElDOF,Parameters.numElDOF))
     self.get_G_uu_1(Parameters)
 
     try:
@@ -56,8 +56,8 @@ def get_G_uu_1(self, Parameters):
     else:
         sys.exit("ERROR. Constitutive model not recognized, check inputs.")
 
-    self.dPdF_voigt = np.zeros((8,9,9), dtype=Parameters.float_dtype)
-    for alpha in range(9):
+    self.dPdF_voigt = np.zeros((Parameters.numGauss,Parameters.numDim**2,Parameters.numDim**2), dtype=Parameters.float_dtype)
+    for alpha in range(Parameters.numDim**2):
         if alpha == 0:
             i = 0
             I = 0
@@ -85,7 +85,7 @@ def get_G_uu_1(self, Parameters):
         elif alpha == 8:
             i = 2
             I = 2
-        for beta in range(9):
+        for beta in range(Parameters.numDim**2):
             if beta == 0:
                 a = 0
                 A = 0

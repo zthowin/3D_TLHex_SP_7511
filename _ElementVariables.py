@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 4, 2022
+# Last Edit:    October 12, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -55,13 +55,13 @@ def get_F(self, Parameters):
     #----------------------------------------------------
     # Reshape the identity matrix for all 8 Gauss points.
     #----------------------------------------------------
-    self.identity = np.zeros((8,3,3), dtype=Parameters.float_dtype)
+    self.identity = np.zeros((Parameters.numGauss,Parameters.numDim,Parameters.numDim), dtype=Parameters.float_dtype)
     np.einsum('ijj -> ij', self.identity)[:] = 1
     #-------------------------------------------------------
     # Create the 3x3 deformation matrix from the 9x1 vector.
     #-------------------------------------------------------
-    self.dudX_mat = np.zeros((8,3,3), dtype=Parameters.float_dtype)
-    for i in range(9):
+    self.dudX_mat = np.zeros((Parameters.numGauss,Parameters.numDim,Parameters.numDim), dtype=Parameters.float_dtype)
+    for i in range(Parameters.numDim*Parameters.numDim):
         if i == 0:
             alpha = 0
             beta  = 0

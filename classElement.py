@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 6, 2022
+# Last Edit:    October 12, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -73,7 +73,7 @@ class Element:
     def set_Gauss_Weights(self, Parameters):
         # Initialize the Gauss quadrature weights.
         if self.Gauss_Order == 2:
-            self.weights = np.ones(8, dtype=Parameters.float_dtype)
+            self.weights = np.ones(Parameters.numGauss, dtype=Parameters.float_dtype)
         else:
             sys.exit("ERROR. Only trilinear elements have been implemented; check quadrature order.")
         return
@@ -105,7 +105,7 @@ class Element:
         #-----------------------------
         # Build shape function matrix.
         #-----------------------------
-        self.Nu = np.zeros((8, 3, 24), dtype=Parameters.float_dtype)
+        self.Nu = np.zeros((Parameters.numGauss, Parameters.numDim, Parameters.numElDOF), dtype=Parameters.float_dtype)
         for i in range(3):
             self.Nu[:, i, 0 + i]  = self.N1
             self.Nu[:, i, 3 + i]  = self.N2
@@ -127,7 +127,7 @@ class Element:
         self.dN7_dxi = (1/8)*(1 + self.eta)*(1 + self.zeta)
         self.dN8_dxi = -self.dN7_dxi
         
-        self.dN_dxi      = np.zeros((8,8), dtype=Parameters.float_dtype)
+        self.dN_dxi      = np.zeros((Parameters.numGauss,Parameters.numGauss), dtype=Parameters.float_dtype)
         self.dN_dxi[:,0] = self.dN1_dxi
         self.dN_dxi[:,1] = self.dN2_dxi
         self.dN_dxi[:,2] = self.dN3_dxi
@@ -148,7 +148,7 @@ class Element:
         self.dN7_deta = -self.dN6_deta
         self.dN8_deta = -self.dN5_deta
         
-        self.dN_deta      = np.zeros((8,8), dtype=Parameters.float_dtype)
+        self.dN_deta      = np.zeros((Parameters.numGauss,Parameters.numGauss), dtype=Parameters.float_dtype)
         self.dN_deta[:,0] = self.dN1_deta
         self.dN_deta[:,1] = self.dN2_deta
         self.dN_deta[:,2] = self.dN3_deta
@@ -169,7 +169,7 @@ class Element:
         self.dN7_dzeta = -self.dN3_dzeta
         self.dN8_dzeta = -self.dN4_dzeta
         
-        self.dN_dzeta      = np.zeros((8,8), dtype=Parameters.float_dtype)
+        self.dN_dzeta      = np.zeros((Parameters.numGauss,Parameters.numGauss), dtype=Parameters.float_dtype)
         self.dN_dzeta[:,0] = self.dN1_dzeta
         self.dN_dzeta[:,1] = self.dN2_dzeta
         self.dN_dzeta[:,2] = self.dN3_dzeta
@@ -196,7 +196,7 @@ class Element:
         #--------------------------------------
         # Construct strain-displacement matrix.
         #--------------------------------------
-        self.Bu = np.zeros((8, 9, 24), dtype=Parameters.float_dtype)
+        self.Bu = np.zeros((Parameters.numGauss, Parameters.numDim**2, Parameters.numElDOF), dtype=Parameters.float_dtype)
 
         for i in range(3):
             self.Bu[:, i, 0]  = self.dN1_dx[:,i]
@@ -242,7 +242,7 @@ class Element:
         #-----------------------------
         # Build shape function matrix.
         #-----------------------------
-        self.Nu_2D = np.zeros((4, 3, 24), dtype=Parameters.float_dtype)
+        self.Nu_2D = np.zeros((4, Parameters.numDim, Parameters.numElDOF), dtype=Parameters.float_dtype)
         for i in range(3):
             self.Nu_2D[:, i, 12 + i] = self.N5_2D
             self.Nu_2D[:, i, 15 + i] = self.N6_2D
@@ -295,7 +295,7 @@ class Element:
         self.dz_deta  = np.einsum('...i, i -> ...', self.dN_deta,  self.coordinates[:,2], dtype=Parameters.float_dtype)
         self.dz_dzeta = np.einsum('...i, i -> ...', self.dN_dzeta, self.coordinates[:,2], dtype=Parameters.float_dtype)
                 
-        self.Je        = np.zeros((8,3,3), dtype=Parameters.float_dtype)
+        self.Je        = np.zeros((Parameters.numGauss,Parameters.numDim,Parameters.numDim), dtype=Parameters.float_dtype)
         self.Je[:,0,0] = self.dx_dxi
         self.Je[:,0,1] = self.dx_deta
         self.Je[:,0,2] = self.dx_dzeta
@@ -306,10 +306,10 @@ class Element:
         self.Je[:,2,1] = self.dz_deta
         self.Je[:,2,2] = self.dz_dzeta
         
-        self.j     = np.zeros(8, dtype=Parameters.float_dtype)
-        self.Jeinv = np.zeros((8,3,3), dtype=Parameters.float_dtype)
+        self.j     = np.zeros(Parameters.numGauss, dtype=Parameters.float_dtype)
+        self.Jeinv = np.zeros((Parameters.numGauss,Parameters.numDim,Parameters.numDim), dtype=Parameters.float_dtype)
 
-        for i in range(8):
+        for i in range(Parameters.numGauss):
             self.j[i]          = np.linalg.det(self.Je[i,:,:])
             self.Jeinv[i,:,:,] = np.linalg.inv(self.Je[i,:,:])
         
