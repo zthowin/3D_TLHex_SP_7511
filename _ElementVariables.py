@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 17, 2022
+# Last Edit:    October 18, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -61,7 +61,7 @@ def get_F(self, Parameters):
     # Create the 3x3 deformation matrix from the 9x1 vector.
     #-------------------------------------------------------
     self.dudX_mat = np.zeros((Parameters.numGauss,Parameters.numDim,Parameters.numDim), dtype=Parameters.float_dtype)
-    for i in range(Parameters.numDim*Parameters.numDim):
+    for i in range(Parameters.numDim**2):
         if i == 0:
             alpha = 0
             beta  = 0
@@ -195,14 +195,15 @@ def get_Hencky(self, Parameters):
     self.log_principle_stretch = np.log(np.sqrt(self.b_w))
     #--------------------------------------------------------
     # Place the principle stretches along the diagonal in the
-    # rotated frame of reference (current configuration).
+    # rotated frame of reference (directions along which the
+    # strain is maximized, i.e., along the eigenvectors).
     #--------------------------------------------------------
     self.Hencky_rotated = np.zeros((Parameters.numGauss,Parameters.numDim,Parameters.numDim), dtype=Parameters.float_dtype)
     np.einsum('...ii -> ...i', self.Hencky_rotated)[:] = self.log_principle_stretch
-    #--------------------------------------------------------
-    # Rotate Hencky strain back to cartesian reference frame.
+    #------------------------------------------------------------
+    # Rotate Hencky strain back to the cartesian reference frame.
     # Holzapfel Eq. 2.108
-    #--------------------------------------------------------
+    #------------------------------------------------------------
     self.Hencky = np.einsum('...ik, ...kl, ...jl -> ...ij', self.b_v, self.Hencky_rotated, self.b_v)
     return
 
@@ -215,5 +216,5 @@ def get_rho(self, Parameters):
 @register_method
 def get_rho_0(self, Parameters):
     # Compute mass density in reference configuration.
-    self.rho_0 = Parameters.rho_0*np.ones((8,3), dtype=Parameters.float_dtype)
+    self.rho_0 = Parameters.rho_0*np.ones((Parameters.numGauss,Parameters.numDim), dtype=Parameters.float_dtype)
     return
