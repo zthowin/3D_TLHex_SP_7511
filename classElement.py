@@ -196,37 +196,41 @@ class Element:
         #--------------------------------------
         # Construct strain-displacement matrix.
         #--------------------------------------
-        self.Bu = np.zeros((Parameters.numGauss, Parameters.numDim**2, Parameters.numElDOF), dtype=Parameters.float_dtype)
+        if Parameters.finiteStrain:
+            self.Bu = np.zeros((Parameters.numGauss, Parameters.numDim**2, Parameters.numElDOF), dtype=Parameters.float_dtype)
 
-        for i in range(3):
-            self.Bu[:, i, 0]  = self.dN1_dx[:,i]
-            self.Bu[:, i, 3]  = self.dN2_dx[:,i]
-            self.Bu[:, i, 6]  = self.dN3_dx[:,i]
-            self.Bu[:, i, 9]  = self.dN4_dx[:,i]
-            self.Bu[:, i, 12] = self.dN5_dx[:,i]
-            self.Bu[:, i, 15] = self.dN6_dx[:,i]
-            self.Bu[:, i, 18] = self.dN7_dx[:,i]
-            self.Bu[:, i, 21] = self.dN8_dx[:,i]
+            for i in range(3):
+                self.Bu[:, i, 0]  = self.dN1_dx[:,i]
+                self.Bu[:, i, 3]  = self.dN2_dx[:,i]
+                self.Bu[:, i, 6]  = self.dN3_dx[:,i]
+                self.Bu[:, i, 9]  = self.dN4_dx[:,i]
+                self.Bu[:, i, 12] = self.dN5_dx[:,i]
+                self.Bu[:, i, 15] = self.dN6_dx[:,i]
+                self.Bu[:, i, 18] = self.dN7_dx[:,i]
+                self.Bu[:, i, 21] = self.dN8_dx[:,i]
 
-        for i in range(3,6):
-            self.Bu[:, i, 1]  = self.dN1_dx[:,i-3]
-            self.Bu[:, i, 4]  = self.dN2_dx[:,i-3]
-            self.Bu[:, i, 7]  = self.dN3_dx[:,i-3]
-            self.Bu[:, i, 10] = self.dN4_dx[:,i-3]
-            self.Bu[:, i, 13] = self.dN5_dx[:,i-3]
-            self.Bu[:, i, 16] = self.dN6_dx[:,i-3]
-            self.Bu[:, i, 19] = self.dN7_dx[:,i-3]
-            self.Bu[:, i, 22] = self.dN8_dx[:,i-3]
+            for i in range(3,6):
+                self.Bu[:, i, 1]  = self.dN1_dx[:,i-3]
+                self.Bu[:, i, 4]  = self.dN2_dx[:,i-3]
+                self.Bu[:, i, 7]  = self.dN3_dx[:,i-3]
+                self.Bu[:, i, 10] = self.dN4_dx[:,i-3]
+                self.Bu[:, i, 13] = self.dN5_dx[:,i-3]
+                self.Bu[:, i, 16] = self.dN6_dx[:,i-3]
+                self.Bu[:, i, 19] = self.dN7_dx[:,i-3]
+                self.Bu[:, i, 22] = self.dN8_dx[:,i-3]
 
-        for i in range(6,9):
-            self.Bu[:, i, 2]  = self.dN1_dx[:,i-6]
-            self.Bu[:, i, 5]  = self.dN2_dx[:,i-6]
-            self.Bu[:, i, 8]  = self.dN3_dx[:,i-6]
-            self.Bu[:, i, 11] = self.dN4_dx[:,i-6]
-            self.Bu[:, i, 14] = self.dN5_dx[:,i-6]
-            self.Bu[:, i, 17] = self.dN6_dx[:,i-6]
-            self.Bu[:, i, 20] = self.dN7_dx[:,i-6]
-            self.Bu[:, i, 23] = self.dN8_dx[:,i-6]
+            for i in range(6,9):
+                self.Bu[:, i, 2]  = self.dN1_dx[:,i-6]
+                self.Bu[:, i, 5]  = self.dN2_dx[:,i-6]
+                self.Bu[:, i, 8]  = self.dN3_dx[:,i-6]
+                self.Bu[:, i, 11] = self.dN4_dx[:,i-6]
+                self.Bu[:, i, 14] = self.dN5_dx[:,i-6]
+                self.Bu[:, i, 17] = self.dN6_dx[:,i-6]
+                self.Bu[:, i, 20] = self.dN7_dx[:,i-6]
+                self.Bu[:, i, 23] = self.dN8_dx[:,i-6]
+
+        elif Parameters.smallStrain:
+            sys.exit("ERROR. Small strain not yet implemented, check Canvas again on 10/20/2022.")
         
         return
 

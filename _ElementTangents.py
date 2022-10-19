@@ -43,12 +43,17 @@ def get_G_Tangents(self, Parameters):
 def get_G_uu_1(self, Parameters):
     # Compute G_uu_1.
     if Parameters.constitutive_model == 'neo-Hookean':
-        self.dPdF = np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.SPK, dtype=Parameters.float_dtype)\
-                    + Parameters.lambd*np.einsum('...Aa, ...Ii -> ...iIaA', self.F_inv, self.F_inv, dtype=Parameters.float_dtype)\
-                    - np.einsum('..., ...iIaA -> ...iIaA', Parameters.lambd*np.log(self.J) - Parameters.mu,\
-                                                 (np.einsum('...Ai, ...Ia -> ...iIaA', self.F_inv, self.F_inv, dtype=Parameters.float_dtype)\
-                                                  + np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.C_inv, dtype=Parameters.float_dtype)))
+        if Parameters.finiteStrain:
+            self.dPdF = np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.SPK, dtype=Parameters.float_dtype)\
+                        + Parameters.lambd*np.einsum('...Aa, ...Ii -> ...iIaA', self.F_inv, self.F_inv, dtype=Parameters.float_dtype)\
+                        - np.einsum('..., ...iIaA -> ...iIaA', Parameters.lambd*np.log(self.J) - Parameters.mu,\
+                                                     (np.einsum('...Ai, ...Ia -> ...iIaA', self.F_inv, self.F_inv, dtype=Parameters.float_dtype)\
+                                                      + np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.C_inv, dtype=Parameters.float_dtype)))
+        elif Parameters.smallStrain:
+            sys.exit("ERROR. Small strain not yet implemented, check Canvas again on 10/20/2022.")
+    
     elif Parameters.constitutive_model == 'Saint Venant-Kirchhoff':
+        sys.exit("ERROR. Saint Venant-Kirchhoff not yet working, check inputs.")
         self.dPdF = np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.SPK, dtype=Parameters.float_dtype)\
                     + Parameters.lambd*np.einsum('...iI, ...aA -> ...iIaA', self.F, self.F, dtype=Parameters.float_dtype)\
                     + Parameters.mu*(np.einsum('...iA, ...aI -> ...iIaA', self.F, self.F, dtype=Parameters.float_dtype)\
