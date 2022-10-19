@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 12, 2022
+# Last Edit:    October 17, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -35,7 +35,7 @@ def compute_variables(self, Parameters):
     self.get_b(Parameters)
     self.get_v()
     self.get_e()
-    self.get_Hencky()
+    self.get_Hencky(Parameters)
     self.get_Cauchy(Parameters)
     self.get_mean_Cauchy(Parameters)
     self.get_von_Mises(Parameters)
@@ -56,7 +56,7 @@ def get_F(self, Parameters):
     # Reshape the identity matrix for all 8 Gauss points.
     #----------------------------------------------------
     self.identity = np.zeros((Parameters.numGauss,Parameters.numDim,Parameters.numDim), dtype=Parameters.float_dtype)
-    np.einsum('ijj -> ij', self.identity)[:] = 1
+    np.einsum('...ii -> ...i', self.identity)[:] = 1
     #-------------------------------------------------------
     # Create the 3x3 deformation matrix from the 9x1 vector.
     #-------------------------------------------------------
@@ -181,9 +181,29 @@ def get_e(self):
     return
 
 @register_method
-def get_Hencky(self):
+def get_Hencky(self, Parameters):
     # Compute Hencky strain.
-    self.Hencky = np.log(self.v)
+    #-----------------------------------------------------
+    # Get eigenvalues, eigenvectors of left Cauchy-Green.
+    # Motivated by polar decomposition, Holzapfel Eq. 2.93
+    #-----------------------------------------------------
+    self.b_w, self.b_v = np.linalg.eig(self.b)
+    #-------------------------
+    # Compute the \lambda_a's.
+    # Holzapfel Eq. 2.122
+    #-------------------------
+    self.log_principle_stretch = np.log(np.sqrt(self.b_w))
+    #--------------------------------------------------------
+    # Place the principle stretches along the diagonal in the
+    # rotated frame of reference (current configuration).
+    #--------------------------------------------------------
+    self.Hencky_rotated = np.zeros((Parameters.numGauss,Parameters.numDim,Parameters.numDim), dtype=Parameters.float_dtype)
+    np.einsum('...ii -> ...i', self.Hencky_rotated)[:] = self.log_principle_stretch
+    #--------------------------------------------------------
+    # Rotate Hencky strain back to cartesian reference frame.
+    # Holzapfel Eq. 2.108
+    #--------------------------------------------------------
+    self.Hencky = np.einsum('...ik, ...kl, ...jl -> ...ij', self.b_v, self.Hencky_rotated, self.b_v)
     return
 
 @register_method
