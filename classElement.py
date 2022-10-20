@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 12, 2022
+# Last Edit:    October 20, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -232,25 +232,102 @@ class Element:
         elif Parameters.smallStrain:
             self.Bu = np.zeros((Parameters.numGauss, Parameters.numDim*2, Parameters.numElDOF), dtype=Parameters.float_dtype)
 
-            for i in range(3):
-                self.Bu[:, i, 0]  = self.dN1_dx[:,i]
-                self.Bu[:, i, 3]  = self.dN2_dx[:,i]
-                self.Bu[:, i, 6]  = self.dN3_dx[:,i]
-                self.Bu[:, i, 9]  = self.dN4_dx[:,i]
-                self.Bu[:, i, 12] = self.dN5_dx[:,i]
-                self.Bu[:, i, 15] = self.dN6_dx[:,i]
-                self.Bu[:, i, 18] = self.dN7_dx[:,i]
-                self.Bu[:, i, 21] = self.dN8_dx[:,i]
+            self.B1        = np.zeros((Parameters.numGauss, Parameters.numDim*2, Parameters.numDim), dtype=Parameters.float_dtype)
+            self.B1[:,0,0] = self.dN1_dx[:,0]
+            self.B1[:,1,1] = self.dN1_dx[:,1]
+            self.B1[:,2,2] = self.dN1_dx[:,2]
+            self.B1[:,3,1] = self.dN1_dx[:,2]
+            self.B1[:,3,2] = self.dN1_dx[:,1]
+            self.B1[:,4,0] = self.dN1_dx[:,2]
+            self.B1[:,4,2] = self.dN1_dx[:,0]
+            self.B1[:,5,0] = self.dN1_dx[:,1]
+            self.B1[:,5,1] = self.dN1_dx[:,0]
 
-            for i in range(3,6):
-                self.Bu[:, i, 1]  = self.dN1_dx[:,i-3]
-                self.Bu[:, i, 4]  = self.dN2_dx[:,i-3]
-                self.Bu[:, i, 7]  = self.dN3_dx[:,i-3]
-                self.Bu[:, i, 10] = self.dN4_dx[:,i-3]
-                self.Bu[:, i, 13] = self.dN5_dx[:,i-3]
-                self.Bu[:, i, 16] = self.dN6_dx[:,i-3]
-                self.Bu[:, i, 19] = self.dN7_dx[:,i-3]
-                self.Bu[:, i, 22] = self.dN8_dx[:,i-3]
+            self.B2        = np.zeros((Parameters.numGauss, Parameters.numDim*2, Parameters.numDim), dtype=Parameters.float_dtype)
+            self.B2[:,0,0] = self.dN2_dx[:,0]
+            self.B2[:,1,1] = self.dN2_dx[:,1]
+            self.B2[:,2,2] = self.dN2_dx[:,2]
+            self.B2[:,3,1] = self.dN2_dx[:,2]
+            self.B2[:,3,2] = self.dN2_dx[:,1]
+            self.B2[:,4,0] = self.dN2_dx[:,2]
+            self.B2[:,4,2] = self.dN2_dx[:,0]
+            self.B2[:,5,0] = self.dN2_dx[:,1]
+            self.B2[:,5,1] = self.dN2_dx[:,0]
+
+            self.B3        = np.zeros((Parameters.numGauss, Parameters.numDim*2, Parameters.numDim), dtype=Parameters.float_dtype)
+            self.B3[:,0,0] = self.dN3_dx[:,0]
+            self.B3[:,1,1] = self.dN3_dx[:,1]
+            self.B3[:,2,2] = self.dN3_dx[:,2]
+            self.B3[:,3,1] = self.dN3_dx[:,2]
+            self.B3[:,3,2] = self.dN3_dx[:,1]
+            self.B3[:,4,0] = self.dN3_dx[:,2]
+            self.B3[:,4,2] = self.dN3_dx[:,0]
+            self.B3[:,5,0] = self.dN3_dx[:,1]
+            self.B3[:,5,1] = self.dN3_dx[:,0]
+
+            self.B4        = np.zeros((Parameters.numGauss, Parameters.numDim*2, Parameters.numDim), dtype=Parameters.float_dtype)
+            self.B4[:,0,0] = self.dN4_dx[:,0]
+            self.B4[:,1,1] = self.dN4_dx[:,1]
+            self.B4[:,2,2] = self.dN4_dx[:,2]
+            self.B4[:,3,1] = self.dN4_dx[:,2]
+            self.B4[:,3,2] = self.dN4_dx[:,1]
+            self.B4[:,4,0] = self.dN4_dx[:,2]
+            self.B4[:,4,2] = self.dN4_dx[:,0]
+            self.B4[:,5,0] = self.dN4_dx[:,1]
+            self.B4[:,5,1] = self.dN4_dx[:,0]
+
+            self.B5        = np.zeros((Parameters.numGauss, Parameters.numDim*2, Parameters.numDim), dtype=Parameters.float_dtype)
+            self.B5[:,0,0] = self.dN5_dx[:,0]
+            self.B5[:,1,1] = self.dN5_dx[:,1]
+            self.B5[:,2,2] = self.dN5_dx[:,2]
+            self.B5[:,3,1] = self.dN5_dx[:,2]
+            self.B5[:,3,2] = self.dN5_dx[:,1]
+            self.B5[:,4,0] = self.dN5_dx[:,2]
+            self.B5[:,4,2] = self.dN5_dx[:,0]
+            self.B5[:,5,0] = self.dN5_dx[:,1]
+            self.B5[:,5,1] = self.dN5_dx[:,0]
+
+            self.B6        = np.zeros((Parameters.numGauss, Parameters.numDim*2, Parameters.numDim), dtype=Parameters.float_dtype)
+            self.B6[:,0,0] = self.dN6_dx[:,0]
+            self.B6[:,1,1] = self.dN6_dx[:,1]
+            self.B6[:,2,2] = self.dN6_dx[:,2]
+            self.B6[:,3,1] = self.dN6_dx[:,2]
+            self.B6[:,3,2] = self.dN6_dx[:,1]
+            self.B6[:,4,0] = self.dN6_dx[:,2]
+            self.B6[:,4,2] = self.dN6_dx[:,0]
+            self.B6[:,5,0] = self.dN6_dx[:,1]
+            self.B6[:,5,1] = self.dN6_dx[:,0]
+
+            self.B7        = np.zeros((Parameters.numGauss, Parameters.numDim*2, Parameters.numDim), dtype=Parameters.float_dtype)
+            self.B7[:,0,0] = self.dN7_dx[:,0]
+            self.B7[:,1,1] = self.dN7_dx[:,1]
+            self.B7[:,2,2] = self.dN7_dx[:,2]
+            self.B7[:,3,1] = self.dN7_dx[:,2]
+            self.B7[:,3,2] = self.dN7_dx[:,1]
+            self.B7[:,4,0] = self.dN7_dx[:,2]
+            self.B7[:,4,2] = self.dN7_dx[:,0]
+            self.B7[:,5,0] = self.dN7_dx[:,1]
+            self.B7[:,5,1] = self.dN7_dx[:,0]
+            
+            self.B8        = np.zeros((Parameters.numGauss, Parameters.numDim*2, Parameters.numDim), dtype=Parameters.float_dtype)
+            self.B8[:,0,0] = self.dN8_dx[:,0]
+            self.B8[:,1,1] = self.dN8_dx[:,1]
+            self.B8[:,2,2] = self.dN8_dx[:,2]
+            self.B8[:,3,1] = self.dN8_dx[:,2]
+            self.B8[:,3,2] = self.dN8_dx[:,1]
+            self.B8[:,4,0] = self.dN8_dx[:,2]
+            self.B8[:,4,2] = self.dN8_dx[:,0]
+            self.B8[:,5,0] = self.dN8_dx[:,1]
+            self.B8[:,5,1] = self.dN8_dx[:,0]
+
+            self.Bu[:,:,0:3]   = self.B1[:]
+            self.Bu[:,:,3:6]   = self.B2[:]
+            self.Bu[:,:,6:9]   = self.B3[:]
+            self.Bu[:,:,9:12]  = self.B4[:]
+            self.Bu[:,:,12:15] = self.B5[:]
+            self.Bu[:,:,15:18] = self.B6[:]
+            self.Bu[:,:,18:21] = self.B7[:]
+            self.Bu[:,:,21:24] = self.B8[:]
         
         return
 

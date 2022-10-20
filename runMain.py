@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 19, 2022
+# Last Edit:    October 20, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -37,10 +37,11 @@ class Parameters:
         self.rho_0  = self.ns*self.rhoS_0
 
         self.grav = 9.81
+        # self.grav = 0
         #------------------------
         # Set constitutive model.
         #------------------------
-        # self.constitutive_model = 'Saint Venant-Kirchhoff' # not working, removed
+        # self.constitutive_model = 'Saint Venant-Kirchhoff' # not working, removed for now
         self.constitutive_model = 'neo-Hookean'
         #-----------------------------------
         # Set boundary condition parameters.
@@ -56,7 +57,7 @@ class Parameters:
         #---------------------------------
         self.TStart   = 0.0
         self.TStop    = 1.0
-        self.numSteps = 10 # set to low value for stability reasons
+        self.numSteps = 20 # set to low value for stability reasons
         self.dt       = (self.TStop - self.TStart)/self.numSteps
         self.t        = self.TStart
         self.n        = 0
@@ -81,15 +82,16 @@ params = Parameters()
 #------------------
 # You edit these...
 #------------------
-params.displacementProblem = False
-params.tractionProblem     = True
+params.displacementProblem = True
+params.tractionProblem     = False
 params.rotationProblem     = False
 
 params.finiteStrain = False
-params.smallStrain  = True # if this comment is here, 
-                            # then small strain is not yet implemented.
-                            # check Canvas tomorrow by end of day 10/20/2022
-                            # for update.
+params.smallStrain  = True
+
+# Only active for small strain
+params.linearElasticity    = False # this is just here for fun, not needed for PS4
+params.nonlinearElasticity = True # this is what you want to set to 'True' for PS4 P4
 #------------------
 #--------------------
 # Call solver script.

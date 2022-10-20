@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 12, 2022
+# Last Edit:    October 20, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -79,7 +79,29 @@ def get_G1(self, Parameters):
         self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.FPK_voigt, self.weights*self.j, dtype=Parameters.float_dtype)
     
     elif Parameters.smallStrain:
-        self.G_1 = np.einsum('kij, ki, k, -> j', self.Bu, self.Cauchy, self.weights*self.j, dtype=Parameters.float_dtype)
+        self.Cauchy_voigt = np.zeros((Parameters.numGauss, Parameters.numDim*2), dtype=Parameters.float_dtype)
+        for alpha in range(Parameters.numDim*2):
+            if alpha == 0:
+                i = 0
+                j = 0
+            elif alpha == 1:
+                i = 1
+                j = 1
+            elif alpha == 2:
+                i = 2
+                j = 2
+            elif alpha == 3:
+                i = 1
+                j = 2
+            elif alpha == 4:
+                i = 0
+                j = 2
+            elif alpha == 5:
+                i = 0
+                j = 1
+            self.Cauchy_voigt[:,alpha] = self.sigma[:,i,j]
+
+        self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.Cauchy_voigt, self.weights*self.j, dtype=Parameters.float_dtype)
     return
 
 @register_method

@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 19, 2022
+# Last Edit:    October 20, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -48,10 +48,7 @@ def get_G_uu_1(self, Parameters):
                     - np.einsum('..., ...iIaA -> ...iIaA', Parameters.lambd*np.log(self.J) - Parameters.mu,\
                                                  (np.einsum('...Ai, ...Ia -> ...iIaA', self.F_inv, self.F_inv, dtype=Parameters.float_dtype)\
                                                   + np.einsum('...ai, ...AI -> ...iIaA', self.identity, self.C_inv, dtype=Parameters.float_dtype)))
-    elif Parameters.smallStrain:
-        sys.exit("ERROR. Small strain not yet implemented, check Canvas again on 10/20/2022.")
 
-    if Parameters.finiteStrain:
         self.dPdF_voigt = np.zeros((Parameters.numGauss,Parameters.numDim**2,Parameters.numDim**2), dtype=Parameters.float_dtype)
         for alpha in range(Parameters.numDim**2):
             if alpha == 0:
@@ -123,6 +120,15 @@ def get_G_uu_1(self, Parameters):
         self.dPdF_voigt[:,0,0] = lambda_bar + 2*Parameters.mu
         self.dPdF_voigt[:,0,1] = lambda_bar
         self.dPdF_voigt[:,0,2] = lambda_bar
+        self.dPdF_voigt[:,1,0] = lambda_bar
+        self.dPdF_voigt[:,1,1] = lambda_bar + 2*Parameters.mu
+        self.dPdF_voigt[:,1,2] = lambda_bar
+        self.dPdF_voigt[:,2,0] = lambda_bar
+        self.dPdF_voigt[:,2,1] = lambda_bar
+        self.dPdF_voigt[:,2,2] = lambda_bar + 2*Parameters.mu
+        self.dPdF_voigt[:,3,3] = Parameters.mu
+        self.dPdF_voigt[:,4,4] = Parameters.mu
+        self.dPdF_voigt[:,5,5] = Parameters.mu
 
     self.G_uu_1 = np.einsum('kiI, kij, kjJ, k -> IJ', self.Bu, self.dPdF_voigt, self.Bu, self.weights*self.j, dtype=Parameters.float_dtype)
     return

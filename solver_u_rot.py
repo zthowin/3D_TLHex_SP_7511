@@ -231,12 +231,16 @@ def main(Parameters, printTol=False):
                 #---------------------------
                 # Save stresses and strains.
                 #---------------------------
-                stress_solve[Parameters.n,element.ID,:,:,:,0] = element.SPK
-                stress_solve[Parameters.n,element.ID,:,:,:,1] = element.FPK
+                if Parameters.finiteStrain:
+                    stress_solve[Parameters.n,element.ID,:,:,:,0] = element.SPK
+                    stress_solve[Parameters.n,element.ID,:,:,:,1] = element.FPK
+                    stress_solve[Parameters.n,element.ID,:,:,:,3] = element.E
+                    stress_solve[Parameters.n,element.ID,:,:,:,4] = element.e
+                    stress_solve[Parameters.n,element.ID,:,:,:,5] = element.Hencky
+                elif Parameters.smallStrain:
+                    stress_solve[Parameters.n,element.ID,:,:,:,4] = element.eps
+
                 stress_solve[Parameters.n,element.ID,:,:,:,2] = element.sigma
-                stress_solve[Parameters.n,element.ID,:,:,:,3] = element.E
-                stress_solve[Parameters.n,element.ID,:,:,:,4] = element.e
-                stress_solve[Parameters.n,element.ID,:,:,:,5] = element.Hencky
 
                 isv_solve[Parameters.n,element.ID,:,0] = element.sigma_mean
                 isv_solve[Parameters.n,element.ID,:,1] = element.von_mises
@@ -289,27 +293,24 @@ def main(Parameters, printTol=False):
     #-----------------------------------
     plt.figure(1)
     if Parameters.displacementProblem or Parameters.tractionProblem:
-        plt.plot(-stress_solve[:,0,0,2,2,3],-stress_solve[:,0,0,2,2,0]*1e-3, 'k+-', label=r'-$S_{33}$ vs. -$E_{33}$', fillstyle='none')
-        plt.plot(-stress_solve[:,0,0,2,2,4],-stress_solve[:,0,0,2,2,2]*1e-3, 'ko-', label=r'-$\sigma_{33}$ vs. -$e_{33}$', fillstyle='none')
-        plt.plot(-stress_solve[:,0,0,2,2,5],-stress_solve[:,0,0,2,2,2]*1e-3, 'ks-', label=r'-$\sigma_{33}$ vs. -$h_{33}$', fillstyle='none')
-        plt.ylabel('-Stress (kPa)')
-        plt.xlabel('-Strain (m/m)')
-
+        if Parameters.finiteStrain:
+            plt.plot(-stress_solve[:,0,0,2,2,3],-stress_solve[:,0,0,2,2,0]*1e-3, 'k+-', label=r'-$S_{33}$ vs. -$E_{33}$', fillstyle='none')
+            plt.plot(-stress_solve[:,0,0,2,2,4],-stress_solve[:,0,0,2,2,2]*1e-3, 'ko-', label=r'-$\sigma_{33}$ vs. -$e_{33}$', fillstyle='none')
+            plt.plot(-stress_solve[:,0,0,2,2,5],-stress_solve[:,0,0,2,2,2]*1e-3, 'ks-', label=r'-$\sigma_{33}$ vs. -$h_{33}$', fillstyle='none')
+        elif Parameters.smallStrain:
+            plt.plot(-stress_solve[:,0,0,2,2,4],-stress_solve[:,0,0,2,2,2]*1e-3, 'ko-', label=r'-$\sigma_{33}$ vs. -$\epsilon_{33}$', fillstyle='none')
+    
     elif Parameters.rotationProblem:
-        #------------------------
-        #Get rid of NaN and inf.
-        #------------------------
-        stress_solve[:,:,:,:,:,5][~np.isfinite(stress_solve[:,:,:,:,:,5])] = 0
         #-------------------------------
         # Calculate minimum eigenvalues.
         #-------------------------------
         minStress = np.min(np.linalg.eig(stress_solve[:,0,0,:,:,2])[0], axis=1)
-        minStrain = np.min(np.linalg.eig(stress_solve[:,0,0,:,:,5])[0], axis=1)
-        # print(minStress, minStrain)
-        #-----------
-        # Make plot.
-        #-----------
+        if Parameters.finiteStrain:
+            minStrain = np.min(np.linalg.eig(stress_solve[:,0,0,:,:,5])[0], axis=1)
+        elif Parameters.smallStrain:
+            minStrain = np.min(np.linalg.eig(stress_solve[:,0,0,:,:,4])[0], axis=1)
         plt.plot(-minStrain,-minStress*1e-3, 'k-', label=r'minStress vs. minStrain')
+    
     plt.ylabel('-Stress (kPa)')
     plt.xlabel('-Strain (m/m)')
 

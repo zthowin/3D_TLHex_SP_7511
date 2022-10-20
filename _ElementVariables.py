@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 19, 2022
+# Last Edit:    October 20, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -33,12 +33,12 @@ def compute_variables(self, Parameters):
         self.get_E()
         self.get_SPK(Parameters)
         self.get_FPK(Parameters)
+        self.get_b(Parameters)
+        self.get_v()
+        self.get_e()
+        self.get_Hencky(Parameters)
     elif Parameters.smallStrain:
         self.get_eps(Parameters)
-    self.get_b(Parameters)
-    self.get_v()
-    self.get_e()
-    self.get_Hencky(Parameters)
     self.get_Cauchy(Parameters)
     self.get_mean_Cauchy(Parameters)
     self.get_von_Mises(Parameters)
@@ -64,35 +64,63 @@ def get_F(self, Parameters):
     # Create the 3x3 deformation matrix from the 9x1 vector.
     #-------------------------------------------------------
     self.dudX_mat = np.zeros((Parameters.numGauss,Parameters.numDim,Parameters.numDim), dtype=Parameters.float_dtype)
-    for alpha in range(Parameters.numDim**2):
-        if alpha == 0:
-            i = 0
-            I = 0
-        elif alpha == 1:
-            i = 0
-            I = 1
-        elif alpha == 2:
-            i = 0
-            I = 2
-        elif alpha == 3:
-            i = 1
-            I = 0
-        elif alpha == 4:
-            i = 1
-            I = 1
-        elif alpha == 5:
-            i = 1
-            I = 2
-        elif alpha == 6:
-            i = 2
-            I = 0
-        elif alpha == 7:
-            i = 2
-            I = 1
-        elif alpha == 8:
-            i = 2
-            I = 2
-        self.dudX_mat[:,i,I] = self.dudX[:,alpha]
+    if Parameters.finiteStrain:
+        for alpha in range(Parameters.numDim**2):
+            if alpha == 0:
+                i = 0
+                I = 0
+            elif alpha == 1:
+                i = 0
+                I = 1
+            elif alpha == 2:
+                i = 0
+                I = 2
+            elif alpha == 3:
+                i = 1
+                I = 0
+            elif alpha == 4:
+                i = 1
+                I = 1
+            elif alpha == 5:
+                i = 1
+                I = 2
+            elif alpha == 6:
+                i = 2
+                I = 0
+            elif alpha == 7:
+                i = 2
+                I = 1
+            elif alpha == 8:
+                i = 2
+                I = 2
+            self.dudX_mat[:,i,I] = self.dudX[:,alpha]
+    #-------------------------------------------------------
+    # Create the 3x3 deformation matrix from the 6x1 vector.
+    #-------------------------------------------------------       
+    elif Parameters.smallStrain:
+        for alpha in range(Parameters.numDim*2):
+            if alpha == 0:
+                i = 0
+                I = 0
+            elif alpha == 1:
+                i = 1
+                I = 1
+            elif alpha == 2:
+                i = 2
+                I = 2
+            elif alpha == 3:
+                i = 1
+                I = 2
+            elif alpha == 4:
+                i = 0
+                I = 2
+            elif alpha == 5:
+                i = 0
+                I = 1
+            self.dudX_mat[:,i,I] = self.dudX[:,alpha]
+        self.dudX_mat[:,2,1] = self.dudX_mat[:,1,2]
+        self.dudX_mat[:,2,0] = self.dudX_mat[:,0,2]
+        self.dudX_mat[:,1,0] = self.dudX_mat[:,0,1]
 
     self.F = self.identity + self.dudX_mat
     return
@@ -144,7 +172,7 @@ def get_FPK(self, Parameters):
 @register_method
 def get_eps(self, Parameters):
     # Compute the small strain tensor.
-    self.eps = 0.5*np.einsum('...iI, ...jJ -> ...ij', self.F, self.F, dtype=Parameters.float_dtype) - self.identity
+    self.eps = 0.5*(self.F + np.transpose(self.F, axes=[0,2,1])) - self.identity
     return
 
 @register_method
@@ -155,9 +183,11 @@ def get_Cauchy(self, Parameters):
     elif Parameters.smallStrain:
         self.eps_v = np.einsum('...ii', self.eps, dtype=Parameters.float_dtype)
         if Parameters.linearElasticity:
-            self.sigma = Parameters.lambd*self.eps_v*self.identity + 2*Parameters.mu*self.eps
+            self.sigma = Parameters.lambd*np.einsum('..., ...ij -> ...ij', self.eps_v, self.identity)\
+                         + 2*Parameters.mu*self.eps
         elif Parameters.nonlinearElasticity:
-            self.sigma = Parameters.lambd*np.log(1 + eps_v)*self.identity + 2*Parameters.mu*self.eps
+            self.sigma = Parameters.lambd*np.einsum('..., ...ij -> ...ij', np.log(1 + self.eps_v), self.identity)\
+                         + 2*Parameters.mu*self.eps
     return
 
 @register_method
@@ -204,19 +234,19 @@ def get_Hencky(self, Parameters):
     # Motivated by polar decomposition, Holzapfel Eq. 2.93
     #-----------------------------------------------------
     self.b_w, self.b_v = np.linalg.eig(self.b)
-    #-------------------------
-    # Compute the \lambda_a's.
+    #------------------------------------
+    # Compute the log of the \lambda_a's.
     # Holzapfel Eq. 2.122
-    #-------------------------
+    #------------------------------------
     self.log_principle_stretch = np.log(np.sqrt(self.b_w))
-    #--------------------------------------------------------
-    # Place the principle stretches along the diagonal in the
-    # rotated frame of reference (current configuration).
-    #--------------------------------------------------------
+    #--------------------------------------------------
+    # Place the principle stretches along the diagonal.
+    #--------------------------------------------------
     self.Hencky_rotated = np.zeros((Parameters.numGauss,Parameters.numDim,Parameters.numDim), dtype=Parameters.float_dtype)
     np.einsum('...ii -> ...i', self.Hencky_rotated)[:] = self.log_principle_stretch
     #------------------------------------------------------------
-    # Rotate Hencky strain back to the cartesian reference frame.
+    # Rotate Hencky strain back to the cartesian reference frame
+    # using diadic(n_a, n_a) ( = b_v, b_v)
     # Holzapfel Eq. 2.108
     #------------------------------------------------------------
     self.Hencky = np.einsum('...ik, ...kl, ...jl -> ...ij', self.b_v, self.Hencky_rotated, self.b_v)
