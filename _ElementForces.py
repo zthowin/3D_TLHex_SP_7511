@@ -44,38 +44,42 @@ def get_G_Forces(self, Parameters):
 @register_method
 def get_G1(self, Parameters):
     # Compute G_1^INT.
-    self.FPK_voigt = np.zeros((Parameters.numGauss,Parameters.numDim**2), dtype=Parameters.float_dtype)
-    for alpha in range(Parameters.numDim**2):
-        if alpha == 0:
-            i = 0
-            I = 0
-        elif alpha == 1:
-            i = 0
-            I = 1
-        elif alpha == 2:
-            i = 0
-            I = 2
-        elif alpha == 3:
-            i = 1
-            I = 0
-        elif alpha == 4:
-            i = 1
-            I = 1
-        elif alpha == 5:
-            i = 1
-            I = 2
-        elif alpha == 6:
-            i = 2
-            I = 0
-        elif alpha == 7:
-            i = 2
-            I = 1
-        elif alpha == 8:
-            i = 2
-            I = 2
-        self.FPK_voigt[:,alpha] = self.FPK[:,i,I]
+    if Parameters.finiteStrain:
+        self.FPK_voigt = np.zeros((Parameters.numGauss,Parameters.numDim**2), dtype=Parameters.float_dtype)
+        for alpha in range(Parameters.numDim**2):
+            if alpha == 0:
+                i = 0
+                I = 0
+            elif alpha == 1:
+                i = 0
+                I = 1
+            elif alpha == 2:
+                i = 0
+                I = 2
+            elif alpha == 3:
+                i = 1
+                I = 0
+            elif alpha == 4:
+                i = 1
+                I = 1
+            elif alpha == 5:
+                i = 1
+                I = 2
+            elif alpha == 6:
+                i = 2
+                I = 0
+            elif alpha == 7:
+                i = 2
+                I = 1
+            elif alpha == 8:
+                i = 2
+                I = 2
+            self.FPK_voigt[:,alpha] = self.FPK[:,i,I]
 
-    self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.FPK_voigt, self.weights*self.j, dtype=Parameters.float_dtype)
+        self.G_1 = np.einsum('kij, ki, k -> j', self.Bu, self.FPK_voigt, self.weights*self.j, dtype=Parameters.float_dtype)
+    
+    elif Parameters.smallStrain:
+        self.G_1 = np.einsum('kij, ki, k, -> j', self.Bu, self.Cauchy, self.weights*self.j, dtype=Parameters.float_dtype)
     return
 
 @register_method

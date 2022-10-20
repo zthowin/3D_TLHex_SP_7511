@@ -3,7 +3,7 @@
 #
 # Author:       Zachariah Irwin
 # Institution:  University of Colorado Boulder
-# Last Edit:    October 19, 2022
+# Last Edit:    October 12, 2022
 #----------------------------------------------------------------------------------------
 import sys
 
@@ -24,72 +24,69 @@ except ImportError:
 
 
 def main(Parameters, printTol=False):
-
-    if Parameters.displacementProblem or Parameters.tractionProblem:
-        #---------------------------------------
-        # 2 element problem, 1D uniaxial strain.
-        #---------------------------------------
-        Parameters.numEl = 2
-        if Parameters.displacementProblem:
-            Parameters.numDOF = 4
-        elif Parameters.tractionProblem:
-            Parameters.numDOF = 8
-        #-----------------------------
-        # Create global coordinates:
-        # 0.01m x 0.01m x 0.1m column.
-        #-----------------------------
-        coordinates = np.zeros((Parameters.numEl, Parameters.numGauss, Parameters.numDim), dtype=Parameters.float_dtype)
-        coordinates[0,:,:] = np.array([[0.0,  0.0,  0.0],
-                                       [0.01, 0.0,  0.0],
-                                       [0.01, 0.01, 0.0],
-                                       [0.0,  0.01, 0.0],
-                                       [0.0,  0.0,  0.05],
-                                       [0.01, 0.0,  0.05],
-                                       [0.01, 0.01, 0.05],
-                                       [0.0,  0.01, 0.05]])
-        coordinates[1,:,:] = np.array([[0.0,  0.0,  0.05],
-                                       [0.01, 0.0,  0.05],
-                                       [0.01, 0.01, 0.05],
-                                       [0.0,  0.01, 0.05],
-                                       [0.0,  0.0,  0.1],
-                                       [0.01, 0.0,  0.1],
-                                       [0.01, 0.01, 0.1],
-                                       [0.0,  0.01, 0.1]])
-        #------------------------------
-        # Create the 'location matrix'.
-        #------------------------------
-        LM       = np.ones((Parameters.numElDOF, Parameters.numEl), dtype=np.int32)
-        LM      *= -1 # (this would be 0 in MATLAB)
-        #----------------------------------------------
-        # Set the free DOFs:
-        #   - For the displacement problem, only the 
-        #     middle 4 nodes are unconstrained in the 
-        #     z-direction. For two elements, this 
-        #     amounts to 4 DOFs.
-        #   - For the traction problem, the top 4 nodes
-        #     are unconstrained in the z-direction. For
-        #     two elements, this amounts to 8 DOFs.
-        #----------------------------------------------
-        if Parameters.displacementProblem or Parameters.tractionProblem:
-            LM[2,1]  = 3
-            LM[5,1]  = 0
-            LM[8,1]  = 1
-            LM[11,1] = 2
-            LM[14,0] = 3
-            LM[17,0] = 0
-            LM[20,0] = 1
-            LM[23,0] = 2
-            if Parameters.tractionProblem:
-                LM[14,1] = 7
-                LM[17,1] = 4
-                LM[20,1] = 5
-                LM[23,1] = 6
+    #---------------------------------------
+    # 2 element problem, 1D uniaxial strain.
+    #---------------------------------------
+    Parameters.numEl = 2
+    if Parameters.displacementProblem:
+        Parameters.numDOF = 4
+    elif Parameters.tractionProblem:
+        Parameters.numDOF = 8
+    #-----------------------------
+    # Create global coordinates:
+    # 0.01m x 0.01m x 0.1m column.
+    #-----------------------------
+    coordinates = np.zeros((Parameters.numEl, Parameters.numGauss, Parameters.numDim), dtype=Parameters.float_dtype)
+    coordinates[0,:,:] = np.array([[0.0,  0.0,  0.0],
+                                   [0.01, 0.0,  0.0],
+                                   [0.01, 0.01, 0.0],
+                                   [0.0,  0.01, 0.0],
+                                   [0.0,  0.0,  0.05],
+                                   [0.01, 0.0,  0.05],
+                                   [0.01, 0.01, 0.05],
+                                   [0.0,  0.01, 0.05]])
+    coordinates[1,:,:] = np.array([[0.0,  0.0,  0.05],
+                                   [0.01, 0.0,  0.05],
+                                   [0.01, 0.01, 0.05],
+                                   [0.0,  0.01, 0.05],
+                                   [0.0,  0.0,  0.1],
+                                   [0.01, 0.0,  0.1],
+                                   [0.01, 0.01, 0.1],
+                                   [0.0,  0.01, 0.1]])
+    #------------------------------
+    # Create the 'location matrix'.
+    #------------------------------
+    LM       = np.ones((Parameters.numElDOF, Parameters.numEl), dtype=np.int32)
+    LM      *= -1 # (this would be 0 in MATLAB)
+    #----------------------------------------------
+    # Set the free DOFs:
+    #   - For the displacement problem, only the 
+    #     middle 4 nodes are unconstrained in the 
+    #     z-direction. For two elements, this 
+    #     amounts to 4 DOFs.
+    #   - For the traction problem, the top 4 nodes
+    #     are unconstrained in the z-direction. For
+    #     two elements, this amounts to 8 DOFs.
+    #----------------------------------------------
+    LM[2,1]  = 3
+    LM[5,1]  = 0
+    LM[8,1]  = 1
+    LM[11,1] = 2
+    LM[14,0] = 3
+    LM[17,0] = 0
+    LM[20,0] = 1
+    LM[23,0] = 2
+    if Parameters.tractionProblem:
+        LM[14,1] = 7
+        LM[17,1] = 4
+        LM[20,1] = 5
+        LM[23,1] = 6
 
     elif Parameters.rotationProblem:
-    #-----------------------------------------------
-    # 1 element problem, displacement with rotation.
-    #-----------------------------------------------
-        Parameters.numEl = 1
+        #-------------------
+        # 1 element problem.
+        #-------------------
+        Parameters.numEl  = 1
         Parameters.numDOF = 4
         #---------------------------
         # Create global coordinates:
@@ -109,14 +106,15 @@ def main(Parameters, printTol=False):
         #------------------------------
         LM       = np.ones((Parameters.numElDOF, Parameters.numEl), dtype=np.int32)
         LM      *= -1 # (this would be 0 in MATLAB)
-        #------------------------------
-        # Set the free DOFs (you code).
-        #------------------------------
+        #-------------------------------------------
+        # Set the free DOFs:
+        #   - Only the top 4 nodes are unconstrained
+        #     in the z-direction.
+        #-------------------------------------------
         LM[14] = 3
-        # LM[?] = ???
-        # .
-        # ..
-        # ...
+        LM[17] = 0
+        LM[20] = 1
+        LM[23] = 2
 
     #----------------------------
     # Set the initial conditions.
@@ -162,29 +160,34 @@ def main(Parameters, printTol=False):
             Parameters.traction = Parameters.tractionLoad*(Parameters.t/Parameters.t_ramp)
 
         elif Parameters.rotationProblem:
-            #------------------------------------------
-            # Update the increment rotation magnitudes.
-            #------------------------------------------
+            #------------------------------
+            # Update the increment rotation.
+            #-------------------------------
             theta_np1 = Parameters.t*Parameters.theta
             g_da_np1  = Parameters.t*Parameters.g_da
             g_db_np1  = Parameters.t*Parameters.g_db
-            #---------------------------------
-            # Update the rotations (you code).
-            #---------------------------------
-            # x_rot1 = ??? some expression or function(theta_np1) + some expression or function(g_da_np1, theta_np1)
-            # y_rot1 = ??? function(theta_np1) + function(g_da_np1, theta_np1)
-            # x_rot2 = ??? function(theta_np1) + function(g_da_np1, theta_np1) + function(g_db_np1, theta_np1)
-            # y_rot2 = ??? function(theta_np1) + function(g_da_np1, theta_np1) + function(g_db_np1, theta_np1)
-            # x_rot3 = ??? function(theta_np1) + function(g_db_np1, theta_np1)
-            # y_rot3 = ??? function(theta_np1) + function(g_db_np1, theta_np1)
-            #------------------------------
-            # Update global BCs (you code).
-            #------------------------------
-            g[3] = x_rot1
-            # g[?] = ???
-            # .
-            # ..
-            # ...
+
+            x_rot1 = -np.sin(theta_np1)*np.tan(theta_np1/2) + g_da_np1*np.cos(theta_np1)
+            y_rot1 = np.sin(theta_np1) + g_da_np1*np.sin(theta_np1)
+            x_rot2 = -(np.sqrt(2)*np.sin(theta_np1)/np.cos(theta_np1/2))*np.cos(np.pi/4 - theta_np1/2) + g_da_np1*np.cos(theta_np1) - g_db_np1*np.sin(theta_np1)
+            y_rot2 = (np.sqrt(2)*np.sin(theta_np1)/np.cos(theta_np1/2))*np.sin(np.pi/4 - theta_np1/2)  + g_da_np1*np.sin(theta_np1) + g_db_np1*np.cos(theta_np1)
+            x_rot3 = -np.sin(theta_np1) - g_db_np1*np.sin(theta_np1)
+            y_rot3 = -np.sin(theta_np1)*np.tan(theta_np1/2) + g_db_np1*np.cos(theta_np1)
+            #-------------------
+            # Update global BCs.
+            #-------------------
+            g[3]  = x_rot1
+            g[4]  = y_rot1
+            g[6]  = x_rot2
+            g[7]  = y_rot2
+            g[9]  = x_rot3
+            g[10] = y_rot3
+            g[15] = x_rot1
+            g[16] = y_rot1
+            g[18] = x_rot2
+            g[19] = y_rot2
+            g[21] = x_rot3
+            g[22] = y_rot3
 
         #---------------------
         # Reset N-R variables.
@@ -289,15 +292,24 @@ def main(Parameters, printTol=False):
         plt.plot(-stress_solve[:,0,0,2,2,3],-stress_solve[:,0,0,2,2,0]*1e-3, 'k+-', label=r'-$S_{33}$ vs. -$E_{33}$', fillstyle='none')
         plt.plot(-stress_solve[:,0,0,2,2,4],-stress_solve[:,0,0,2,2,2]*1e-3, 'ko-', label=r'-$\sigma_{33}$ vs. -$e_{33}$', fillstyle='none')
         plt.plot(-stress_solve[:,0,0,2,2,5],-stress_solve[:,0,0,2,2,2]*1e-3, 'ks-', label=r'-$\sigma_{33}$ vs. -$h_{33}$', fillstyle='none')
-    
+        plt.ylabel('-Stress (kPa)')
+        plt.xlabel('-Strain (m/m)')
+
     elif Parameters.rotationProblem:
+        #------------------------
+        #Get rid of NaN and inf.
+        #------------------------
+        stress_solve[:,:,:,:,:,5][~np.isfinite(stress_solve[:,:,:,:,:,5])] = 0
         #-------------------------------
         # Calculate minimum eigenvalues.
         #-------------------------------
         minStress = np.min(np.linalg.eig(stress_solve[:,0,0,:,:,2])[0], axis=1)
         minStrain = np.min(np.linalg.eig(stress_solve[:,0,0,:,:,5])[0], axis=1)
+        # print(minStress, minStrain)
+        #-----------
+        # Make plot.
+        #-----------
         plt.plot(-minStrain,-minStress*1e-3, 'k-', label=r'minStress vs. minStrain')
-    
     plt.ylabel('-Stress (kPa)')
     plt.xlabel('-Strain (m/m)')
 

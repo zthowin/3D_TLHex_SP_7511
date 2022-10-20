@@ -40,7 +40,7 @@ class Parameters:
         #------------------------
         # Set constitutive model.
         #------------------------
-        # self.constitutive_model = 'Saint Venant-Kirchhoff'
+        # self.constitutive_model = 'Saint Venant-Kirchhoff' # not working, removed
         self.constitutive_model = 'neo-Hookean'
         #-----------------------------------
         # Set boundary condition parameters.
@@ -81,15 +81,17 @@ params = Parameters()
 #------------------
 # You edit these...
 #------------------
-params.displacementProblem = True
-params.tractionProblem     = False
+params.displacementProblem = False
+params.tractionProblem     = True
 params.rotationProblem     = False
 
-params.finiteStrain = True
-params.smallStrain  = False
+params.finiteStrain = False
+params.smallStrain  = True # if this comment is here, 
+                            # then small strain is not yet implemented.
+                            # check Canvas tomorrow by end of day 10/20/2022
+                            # for update.
 #------------------
-
-# np.seterr(all='raise') # Raise runtime errors for division by zero, or log(0)
-# np.set_printoptions(formatter={'float': lambda x: "{0:0.3e}".format(x)})
-
+#--------------------
+# Call solver script.
+#--------------------
 solver_u.main(params,printTol=False)
